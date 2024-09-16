@@ -7,7 +7,6 @@ You should modify the following files:
 - `test.c` - this is the start of a test skeleton for your code
 
 Additional files provided:
-- `lab1.h` - defines `struct cpu` and a few other things
 - `Makefile` - so the `make` command will work
 - `asm.py` - assembler, translates assembly language to binary
 - `hello.asm`, `hello.bin` - "Hello world!" in 6500 assembler
@@ -61,8 +60,8 @@ The file `test.c` shows how you might be able to do this. Note that you may find
 ~/base-lab1$ echo 'ADD R3 + R6 -> R1' > t.asm
 ~/base-lab1$ python3 asm.py t.asm
 bytes: 2
-50F1
+5073
 ~/base-lab1$ ./disasm t.bin
-0000 : 50f1      : ADD R3 + R6 -> R1
+0000 : 5073      : ADD R3 + R6 -> R1
 ```
 

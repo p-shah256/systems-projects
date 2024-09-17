@@ -31,6 +31,21 @@ void test1(struct cpu *cpu)
     assert(cpu->R[1] == 15);
 }
 
+void test_SET(struct cpu *cpu)
+{
+    zerocpu(cpu);
+    store2(cpu, 0x1001, 0);
+    store2(cpu, 0x1234, 2);
+    int val = emulate(cpu);
+
+    printf("emulate() returned: %d\n", val);
+    // Print the value of R1
+    printf("R1 now contains: 0x%04X\n", cpu->R[1]);
+    // Print the current PC value
+    printf("PC is now: %d\n", cpu->PC);
+    printf("SET instruction test completed.\n");
+}
+
 char memory[64*1024];
 struct cpu cpu;
 
@@ -38,7 +53,8 @@ int main(int argc, char **argv)
 {
     cpu.memory = memory;
     
-    test1(&cpu);
+    /* test1(&cpu); */
+    test_SET(&cpu);
 
     printf("all tests PASS\n");
 }

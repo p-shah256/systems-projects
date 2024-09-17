@@ -21,9 +21,18 @@ uint16_t load2(struct cpu *cpu, uint16_t addr) {
 /* emulate(struct cpu*) - emulate a single instruction
  *     - returns 1 for halt, 0 for no halt 
  */
-int emulate(struct cpu *cpu)
-{
+int emulate(struct cpu *cpu) {
     uint16_t insn = load2(cpu, cpu->PC);
-
+    printf("instruction is 0x%04X\n", insn);
+    if ((insn & 0xF000) == 0x1000 ) {
+      int op = (insn >> 9) & 7;
+      int c = (insn >> 6) & 7;
+      int b = (insn >> 3) & 7;
+      int a = insn & 7;
+      printf("working with register %d", a);
+        // load 0x1234 into R1
+      cpu->R[a] = cpu->PC+2;
+    }
+    return 1;
     /* your code here */
 }

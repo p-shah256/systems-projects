@@ -29,9 +29,8 @@ int emulate(struct cpu *cpu) {
       int c = (insn >> 6) & 7;
       int b = (insn >> 3) & 7;
       int a = insn & 7;
-      printf("working with register %d", a);
-        // load 0x1234 into R1
-      cpu->R[a] = cpu->PC+2;
+      cpu->R[a] = load2(cpu, cpu->PC+2);
+      cpu->PC = cpu->PC+4;
     }
     return 1;
     /* your code here */

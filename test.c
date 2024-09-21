@@ -68,7 +68,7 @@ void test_STORE_1(struct cpu *cpu) {
   zerocpu(cpu);
 
   uint16_t register_value = 0x2A28;
-  cpu->R[1] = 0x2A28;
+  cpu->R[1] = register_value;
   // store full of R1
   // 0011 00 0000 000001
   uint16_t instruction = 0x3001; // STORE R1
@@ -85,9 +85,9 @@ void test_STORE_1(struct cpu *cpu) {
   assert(val == 0);
 
   // Check the full 16-bit value at 0x5A69
-  uint16_t stored_value = load2(cpu, 0x5A69);
+  uint16_t stored_value = load2(cpu, address);
   printf("Value at memory address 0x%04X: 0x%04X\n", address, stored_value);
-  assert(stored_value == 0x2B28);
+  assert(stored_value == register_value);
 }
 
 //          +---------------------------------------------------------+

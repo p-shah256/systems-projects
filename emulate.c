@@ -3,6 +3,7 @@
  * description: solution to Lab 1
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -103,7 +104,8 @@ int emulate(struct cpu *cpu)
         else{
             //0x3800
             uint16_t rVal = cpu->R[a];
-            cpu->R[b] = load2(cpu,rVal);
+            uint16_t addressToLoadInto = cpu->R[b];
+            store2(cpu, rVal,addressToLoadInto);
             cpu->PC = cpu->PC + 2;
         }
         

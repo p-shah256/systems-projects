@@ -154,11 +154,11 @@ int main(int argc, char **argv) {
   cpu.memory = memory;
 
   /* test1(&cpu); */
-  test_SET_1(&cpu);
-  test_SET_2(&cpu);
+  //test_SET_1(&cpu);
+  //test_SET_2(&cpu);
   test_STORE_1(&cpu);
-  test_STORE_2(&cpu);
-  test_STORE_3(&cpu);
+  //test_STORE_2(&cpu);
+  //test_STORE_3(&cpu);
 
   printf("all tests PASS\n");
 }

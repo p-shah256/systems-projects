@@ -53,8 +53,8 @@ int emulate(struct cpu *cpu)
         //LOAD
         //int is_indirect = ((insn & 0x0800) != 0);
         //int is_byte = ((insn & 0x0400) != 0);
-        //printf("indirect: %d isByte: %d",is_indirect,is_byte);
-        printf("op: %d c:%d b:%d a:%d",op,c,b,a);
+        printf("indirect: %d isByte: %d",is_indirect,is_byte);
+        //printf("");
         //LOAD
 
         if(is_indirect == 0 && is_byte == 0){
@@ -98,9 +98,12 @@ int emulate(struct cpu *cpu)
     }
     else if((insn & 0xF000) == 0x4000){
         //MOVE
-        printf("s:%d d:%d",a,b);
-        int copy = cpu->R[a];
-        cpu->R[b] = copy;
+        //printf("s:%d d:%d",a,b);
+        uint8_t s = (insn >> 8 ) & 0x0F;
+        uint8_t d = (insn & 0XFF);
+        print("s: %d d: %d",s,d);
+        d &= 0x0F;
+        cpu->R[d] = cpu->R[s];
         return 0;
     }
     else if((insn & 0xF000) == 0x5000){

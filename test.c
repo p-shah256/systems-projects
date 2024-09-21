@@ -108,7 +108,7 @@ void test_STORE_2(struct cpu *cpu) {
   uint16_t stored_value = load2(cpu, 0x5A69);
   printf("Value at memory address 0x%04X: 0x%04X\n", address, stored_value);
   // 00101010
-  assert(stored_value == 0x2A00);
+  assert(stored_value == 0x28);
 }
 
 //          +---------------------------------------------------------+
@@ -152,8 +152,8 @@ void test_STORE_4(struct cpu *cpu) {
   cpu->R[4] = r_4_value;
   cpu->R[5] = r_5_value;
 
-  // store full bytes of R3 into address held at R5
-  // 0011 11 0000 100 101
+  // store full bytes of R4 into address held at R5
+  // 0011 11 0000 101 100
   uint16_t instruction = 0x3C2C;
   store2(cpu, instruction, 0);
 
@@ -168,32 +168,76 @@ void test_STORE_4(struct cpu *cpu) {
 }
 
 
-
 //  ────────────────────────────────────────── 1. LOAD R1 <- *0x5678 ──
 //  ──────────────────────── load full contents from address into R1 ──
 void test_LOAD_1(struct cpu *cpu) {
   printf("\nrunning LOAD_1 ------------------ \n");
   zerocpu(cpu);
 
-  uint16_t r_4_value = 0x2A28;
-  uint16_t r_5_value = 0x1234;
-  cpu->R[4] = r_4_value;
-  cpu->R[5] = r_5_value;
+  uint16_t address = 0x2A28;
+  uint16_t valueAtAddr = 0xA123;
+  store2(cpu, valueAtAddr, address);
 
-  // store full bytes of R3 into address held at R5
-  // 0011 11 0000 100 011
+  // load full contents from address into R1
+  // 0010 00 0000 000 001
   uint16_t instruction = 0x3C23;
   store2(cpu, instruction, 0);
+  store2(cpu, address, 2);
 
   int val = emulate(cpu);
   assert(val == 0);
 
   // Check the full 16-bit value at memory address stored at r[5]
-  uint16_t stored_value = load2(cpu, r_5_value);
-  printf("Value at memory address 0x%04X: 0x%04X\n", r_5_value, stored_value);
-  // 00101010
-  assert(stored_value == r_4_value);
+  assert(cpu->R[1] == valueAtAddr);
 }
+
+//  ─────────────────────────────────────────── 2. LOAD.B R2 <- *0x5678 ──
+//  ─────────────────────────────── load 1 byte from address into R2 ──
+void test_LOAD_2(struct cpu *cpu) {
+  printf("\nrunning LOAD_2 ------------------ \n");
+  zerocpu(cpu);
+
+  uint16_t address = 0x2A28;
+  uint16_t valueAtAddr = 0xA123;
+  store2(cpu, valueAtAddr, address);
+
+  // load 1 byte from address into R2
+  // 0010 01 0000 000 010
+  uint16_t instruction = 0x2402;
+  store2(cpu, instruction, 0);
+  store2(cpu, address, 2);
+
+  int val = emulate(cpu);
+  assert(val == 0);
+
+  // Check the full 16-bit value at memory address stored at r[5]
+  assert(cpu->R[1] == 0x23);
+}
+
+//  ────────────────────────────────────────── 3. LOAD R3 <- *R5     ──
+//  ──────────────────────── load full contents from R5 into R1 ──
+void test_LOAD_3(struct cpu *cpu) {
+  printf("\nrunning LOAD_3 ------------------ \n");
+  zerocpu(cpu);
+
+  uint16_t address = 0x2A28;
+  uint16_t valueAtAddr = 0xA123;
+  store2(cpu, valueAtAddr, address);
+
+  // load full contents from address into R1
+  // 0010 00 0000 000 001
+  uint16_t instruction = 0x3C23;
+  store2(cpu, instruction, 0);
+  store2(cpu, address, 2);
+
+  int val = emulate(cpu);
+  assert(val == 0);
+
+  // Check the full 16-bit value at memory address stored at r[5]
+  assert(cpu->R[1] == valueAtAddr);
+}
+
+
 
 char memory[64 * 1024];
 struct cpu cpu;

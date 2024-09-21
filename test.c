@@ -227,8 +227,8 @@ void test_LOAD_3(struct cpu *cpu) {
   cpu->R[5] = address;
 
   // load full contents from address sepcified at R5 into R3
-  // 0010 00 0000 101 011
-  uint16_t instruction = 0x202B;
+  // 0010 10 0000 101 011
+  uint16_t instruction = 0x282B;
   store2(cpu, instruction, 0);
 
   int val = emulate(cpu);
@@ -250,8 +250,8 @@ void test_LOAD_4(struct cpu *cpu) {
   cpu->R[5] = address;
 
   // load full contents from address sepcified at R5 into R3
-  // 0010 01 0000 101 011
-  uint16_t instruction = 0x242B;
+  // 0010 11 0000 101 011
+  uint16_t instruction = 0x2C2B;
   store2(cpu, instruction, 0);
 
   int val = emulate(cpu);

@@ -56,7 +56,7 @@ int emulate(struct cpu *cpu)
         printf("indirect: %d isByte: %d",is_indirect,is_byte);
         //printf("");
         //LOAD
-
+        //printf()
         if(is_indirect == 0 && is_byte == 0){
             cpu->R[a] = load2(cpu,cpu->PC+2);
 
@@ -77,7 +77,8 @@ int emulate(struct cpu *cpu)
     }
     else if((insn & 0xF000) == 0x3000){
         //STORE
-        if((insn & 0xF000) == 0x3000){
+        printf("store type : 0x%02X",((insn >> 8) & 0xFF));
+        if((insn & 0xFF00) == 0x30){
             cpu->memory[cpu->PC+2] = load2(cpu,cpu->R[a]);
             cpu->PC = cpu->PC + 4;
         }

@@ -51,8 +51,6 @@ void test_SET_1(struct cpu *cpu) {
   assert((cpu->R[2] = 0x1234));
 }
 
-// store variants
-
 //          +---------------------------------------------------------+
 //          |                 1. STORE R1 -> *0x5678                  |
 //          |  Store full contents of R1 to constant address 0x5678   |
@@ -178,11 +176,12 @@ int main(int argc, char **argv) {
   cpu.memory = memory;
 
   /* test1(&cpu); */
-  //test_SET_1(&cpu);
-  //test_SET_2(&cpu);
+  test_SET_1(&cpu);
+  test_SET_2(&cpu);
   test_STORE_1(&cpu);
-  //test_STORE_2(&cpu);
-  //test_STORE_3(&cpu);
+  test_STORE_2(&cpu);
+  test_STORE_3(&cpu);
+  test_STORE_4(&cpu);
 
   printf("all tests PASS\n");
 }

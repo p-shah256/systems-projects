@@ -88,15 +88,22 @@ int emulate(struct cpu *cpu)
             cpu->PC = cpu->PC + 4;
         }
         else if(((insn & 0xFF00) >> 8) == 0x34){
-            cpu->memory[cpu->PC+2] = cpu->memory[cpu->R[a]+1] << 8;
+            //cpu->memory[cpu->PC+2] = cpu->memory[cpu->R[a]+1] << 8;
+            uint16_t addrVal = load2(cpu,cpu->PC+2);
+            uint16_t rVal = cpu->R[a];
+            cpu->memory[addrVal+1] = (rVal >> 8) & 0xFF;
             cpu->PC = cpu->PC + 4;
         }
         else if(((insn & 0xFF00) >> 8) == 0x3C){
-            cpu->R[b] = cpu->memory[(cpu->R[a])+1] << 8;
+            //uint16_t addrVal = load2(cpu,cpu->PC+2);
+            uint16_t rVal = cpu->R[a];
+            cpu->R[b] = cpu->memory[rVal+1] << 8;
             cpu->PC = cpu->PC + 2;
         }
         else{
-            cpu->R[b] = load2(cpu,cpu->R[a]);
+            //0x3800
+            uint16_t rVal = cpu->R[a];
+            cpu->R[b] = load2(cpu,rVal);
             cpu->PC = cpu->PC + 2;
         }
         

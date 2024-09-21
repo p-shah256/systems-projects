@@ -174,6 +174,33 @@ int emulate(struct cpu *cpu)
     }
     else if((insn & 0xF000) == 0x6000){
         //JMP_ABS
+        int op_val = (insn & 0x0F00) << 4;
+        if(op_val >= 7){
+            return 1;
+        }
+        switch(op_val){
+            case 0x01:
+                //JMP_Z
+                break;
+            case 0x02:
+                //JMP_NZ
+                break;
+            case 0x03:
+                //JMP_LT
+                break;
+            case 0x04:
+                //JMP_GT
+                break;
+            case 0x05:
+                //JMP_LE
+                break;
+            case 0x06:
+                //JMP_GE
+                break;
+            default:
+                //Unconditional JMP
+                break;
+        }
         return 0;
     }
     else if((insn & 0xF000) == 0x8000){

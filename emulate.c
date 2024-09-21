@@ -25,8 +25,6 @@ void store2(struct cpu *cpu, uint16_t data, uint16_t addr) {
 uint16_t load2(struct cpu *cpu, uint16_t addr) {
     return (cpu->memory[addr] | (cpu->memory[addr+1] << 8));
 }
-
-
 /* emulate(struct cpu*) - emulate a single instruction
  *     - returns 1 for halt, 0 for no halt 
  */
@@ -47,7 +45,6 @@ int emulate(struct cpu *cpu)
         return 0;
         //set
     }
-    //LOAD x2000 if loading constant from 16 bit word
     else if ((insn & 0xF000) == 0x2000) {
         int is_indirect = ((insn & 0x0800) != 0);
         int is_byte = ((insn & 0x0400) != 0);
@@ -98,7 +95,7 @@ int emulate(struct cpu *cpu)
         else if(((insn & 0xFF00) >> 8) == 0x3C){
             //uint16_t addrVal = load2(cpu,cpu->PC+2);
             uint16_t rVal = cpu->R[a];
-            cpu->R[b] = cpu->memory[rVal+1] << 8;
+            cpu->memory[cpu->R[b]] = cpu->memory[rVal+1] << 8;
             cpu->PC = cpu->PC + 2;
         }
         else{

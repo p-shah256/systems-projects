@@ -154,7 +154,7 @@ void test_STORE_4(struct cpu *cpu) {
 
   // store full bytes of R3 into address held at R5
   // 0011 11 0000 100 101
-  uint16_t instruction = 0x3C25;
+  uint16_t instruction = 0x3C2C;
   store2(cpu, instruction, 0);
 
   int val = emulate(cpu);

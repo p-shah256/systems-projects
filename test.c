@@ -53,12 +53,6 @@ void test_SET_1(struct cpu *cpu) {
 
 // store variants
 
-// 3. STORE R3 -> *R5
-// Store full contents of R3 to the address held in R5
-//
-// 4. STORE.B R4 -> *R5
-// store contents of R4 into the address stored at R5
-
 //          +---------------------------------------------------------+
 //          |                 1. STORE R1 -> *0x5678                  |
 //          |  Store full contents of R1 to constant address 0x5678   |
@@ -124,7 +118,7 @@ void test_STORE_2(struct cpu *cpu) {
 //          |   Store full contents of R3 to the address held in R5   |
 //          +---------------------------------------------------------+
 void test_STORE_3(struct cpu *cpu) {
-  printf("\nrunning STORE_2 ------------------ \n");
+  printf("\nrunning STORE_3 ------------------ \n");
   zerocpu(cpu);
 
   uint16_t r_3_value = 0x2A28;
@@ -146,6 +140,36 @@ void test_STORE_3(struct cpu *cpu) {
   // 00101010
   assert(stored_value == r_3_value);
 }
+
+//          +---------------------------------------------------------+
+//          |                  4. STORE.B R4 -> *R5                   |
+//          |   store 1 byte   of R4 into the address stored at R5    |
+//          +---------------------------------------------------------+
+void test_STORE_4(struct cpu *cpu) {
+  printf("\nrunning STORE_4 ------------------ \n");
+  zerocpu(cpu);
+
+  uint16_t r_4_value = 0x2A28;
+  uint16_t r_5_value = 0x1234;
+  cpu->R[4] = r_4_value;
+  cpu->R[5] = r_5_value;
+
+  // store full bytes of R3 into address held at R5
+  // 0011 11 0000 100 011
+  uint16_t instruction = 0x3C23;
+  store2(cpu, instruction, 0);
+
+  int val = emulate(cpu);
+  assert(val == 0);
+
+  // Check the full 16-bit value at memory address stored at r[5]
+  uint16_t stored_value = load2(cpu, r_5_value);
+  printf("Value at memory address 0x%04X: 0x%04X\n", r_5_value, stored_value);
+  // 00101010
+  assert(stored_value == r_4_value);
+}
+
+
 
 char memory[64 * 1024];
 struct cpu cpu;

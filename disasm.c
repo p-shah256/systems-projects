@@ -27,14 +27,14 @@ int disasm(uint16_t insn, uint16_t next, char *buf)
     int ra = insn & 7;
     int rb = (insn & 070) >> 3;
     int rc = (insn & 0700) >> 6;
-    
+
     int indir = insn & 0x0800;
     int byte = insn & 0x0400;
     char *tmp = "";
 
     int op = insn & 0x0E00;
     int ccc = (insn & 0x0E00) >> 9;
-    
+
     switch (insn & 0xF000) {
     case 0x1000:            /* SET */
         sprintf(buf, "SET R%d = 0x%04x", ra, next);
@@ -98,29 +98,29 @@ int disasm(uint16_t insn, uint16_t next, char *buf)
         return 4;
         break;
     case 0x7000:            /* JMP register indirect */
-        sprintf(buf, "JMP%s *R%d", jmp_suff[ccc], ra);
+        sprintf(buf, "JMP%s *R%d", jmp_suff[ccc], rc);
         break;
     case 0x8000:            /* CALL absolute */
         sprintf(buf, "CALL 0x%04x", next);
         return 4;
         break;
     case 0x9000:            /* CALL register indirect */
-        sprintf(buf, "CALL *R%d", ra);
+        sprintf(buf, "CALL *R%d", rc);
         break;
     case 0xA000:            /* RET */
         sprintf(buf, "RET");
         break;
     case 0xB000:            /* PUSH */
-        sprintf(buf, "PUSH R%d", ra);
+        sprintf(buf, "PUSH R%d", rc);
         break;
     case 0xC000:            /* POP */
-        sprintf(buf, "POP R%d", ra);
+        sprintf(buf, "POP R%d", rc);
         break;
     case 0xD000:            /* IN */
-        sprintf(buf, "IN R%d", ra);
+        sprintf(buf, "IN R%d", rc);
         break;
     case 0xE000:            /* OUT */
-        sprintf(buf, "OUT R%d", ra);
+        sprintf(buf, "OUT R%d", rc);
         break;
     case 0xF000:            /* HALT */
         sprintf(buf, "HALT");
@@ -133,14 +133,14 @@ static uint16_t load2(unsigned char *mem, uint16_t addr) {
     return mem[addr] | (mem[addr+1] << 8);
 }
 
-#ifdef STANDALONE
+#if STANDALONE
 unsigned char _mem[64*1024];
 int main(int argc, char **argv)
 {
     FILE *fp = fopen(argv[1], "rb");
     if (!fp)
         perror("open"), exit(1);
-    
+
     int len = fread(_mem, 1, sizeof(_mem), fp);
 
     int offset = 0;

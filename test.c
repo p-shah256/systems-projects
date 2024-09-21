@@ -252,6 +252,8 @@ int main(int argc, char **argv) {
   test_STORE_2(&cpu);
   test_STORE_3(&cpu);
   test_STORE_4(&cpu);
+  test_LOAD_1(&cpu);
+  test_LOAD_2(&cpu);
 
   printf("all tests PASS\n");
 }

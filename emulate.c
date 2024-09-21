@@ -49,7 +49,7 @@ int emulate(struct cpu *cpu)
     //LOAD x2000 if loading constant from 16 bit word
     else if ((insn & 0xF000) == 0x2000) {
         int is_indirect = ((insn & 0x0800) != 0);
-        //int is_byte = ((insn & 0x0400) != 0);
+        int is_byte = ((insn & 0x0400) != 0);
         //LOAD
         //int is_indirect = ((insn & 0x0800) != 0);
         //int is_byte = ((insn & 0x0400) != 0);
@@ -57,32 +57,22 @@ int emulate(struct cpu *cpu)
         printf("op: %d c:%d b:%d a:%d",op,c,b,a);
         //LOAD
 
-        if(is_indirect){
+        if(is_indirect == 0 && is_byte == 0){
             cpu->R[a] = load2(cpu,cpu->PC+2);
 
         }
-        else{
+        else if(is_byte == 1 && is_indirect == 0){
             cpu->R[a] = cpu->memory[(cpu->PC+2)+1]<<8;
         }
-        cpu->PC = cpu->PC+4;
-        return 0;
-    }
-    else if ((insn & 0xF000) == 0x2400) {
-        //LOAD x2400 loading from constant 8 bit word
-        //printf("c:%d b:%d a:%d",c,b,a);
-        int is_indirect = ((insn & 0x0800) != 0);
-        //int is_byte = ((insn & 0x0400) != 0);
-
-        if(is_indirect == 1){
-            //load 16 bits from register b to register a
+        else if(is_byte == 0 && is_indirect == 1 ){
+            //0x2800
             cpu->R[a] = load2(cpu,cpu->R[b]);
         }
         else{
-            //load 8 bit from register b to register a
+            //if indirec and is byte are 0 then 0x2C00
             cpu->R[a] = cpu->memory[(cpu->R[b])+1] << 8;
         }
-        cpu->PC = cpu->PC+2;
-        //LOAD
+        cpu->PC = cpu->PC+4;
         return 0;
     }
     else if((insn & 0xF000) == 0x3000){
@@ -103,7 +93,7 @@ int emulate(struct cpu *cpu)
             cpu->R[b] = load2(cpu,cpu->R[a]);
             cpu->PC = cpu->PC + 2;
         }
-
+        
         return 0;
     }
     else if((insn & 0xF000) == 0x4000){
@@ -140,7 +130,7 @@ int emulate(struct cpu *cpu)
             case 0x0C00:
                 //CMP
                 //uint16_t val = cpu->R[a] - cpu->R[b];
-
+                
                 //int is_negative = (val & 0x8000) != 0;
                 if(cpu->R[a] - cpu->R[b] < 0){
                     cpu->Z = 0;
@@ -210,7 +200,7 @@ int emulate(struct cpu *cpu)
         //HALT
         return 1;
     }
-
+    
     //
 
     return 1;

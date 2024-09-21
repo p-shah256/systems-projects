@@ -94,7 +94,7 @@ void test_STORE_2(struct cpu *cpu) {
   cpu->R[1] = 0x2A28;
   // store 1 byte of R1
   // 0011 01 0000 000 001
-  uint16_t instruction = 0x3001;
+  uint16_t instruction = 0x3401;
   store2(cpu, instruction, 0);
   // into constant address
   // 0x5A69

@@ -101,7 +101,7 @@ int emulate(struct cpu *cpu)
         //printf("s:%d d:%d",a,b);
         uint8_t s = (insn >> 8 ) & 0x0F;
         uint8_t d = (insn & 0XFF);
-        print("s: %d d: %d",s,d);
+        printf("s: %d d: %d",s,d);
         d &= 0x0F;
         cpu->R[d] = cpu->R[s];
         return 0;

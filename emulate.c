@@ -78,7 +78,7 @@ int emulate(struct cpu *cpu)
     else if((insn & 0xF000) == 0x3000){
         //STORE
         printf("store type : 0x%02X",((insn >> 8) & 0xFF));
-        if((insn & 0xFF00) == 0x30){
+        if((insn & 0xFF00) >> 8 == 0x30){
             cpu->memory[cpu->PC+2] = load2(cpu,cpu->R[a]);
             cpu->PC = cpu->PC + 4;
         }

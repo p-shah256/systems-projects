@@ -311,27 +311,49 @@ int emulate(struct cpu *cpu)
     }
     else if((insn & 0xF000) == 0x8000){
         //CALL absolute
+        cpu->SP = cpu->SP - 2;
+        store2(cpu,load2(cpu,cpu->PC+4),cpu->SP);
+        
         return 0;
     }
     else if((insn & 0xF000) == 0x9000){
         //CALL register
+        cpu->SP = cpu->SP - 2;
+        store2(cpu,load2(cpu,cpu->PC+2),cpu->SP);
+        cpu->R[cpu->PC] = load2(cpu,cpu->R[a]);
         return 0;
     }
     else if((insn & 0xF000) == 0xA ){
         //RET
+        cpu->PC = load2(cpu,cpu->SP);
+        cpu->SP = cpu->SP + 2;
         return 0;
     }
     else if((insn & 0xF000) == 0xB){
         //PUSH
+        uint16_t res;
+        cpu->SP = cpu->SP - 2;
+        res = load2(cpu,cpu->R[a]);
+        store2(cpu,res,cpu->SP);
+        return 0;
     }
     else if((insn & 0xF000) == 0xC){
         //POP
+        uint16_t res;
+        res = load2(cpu,cpu->SP);
+        store2(cpu,res,cpu->R[a]);
+        cpu->SP = cpu->SP + 2;
+        return 0;
     }
     else if((insn & 0xF000) == 0xD){
         //IN
+        cpu->R[a] = fgetc(stdin);
+        cpu->PC = cpu->PC+2;
     }
     else if((insn & 0xF000) == 0xE){
         //OUT
+        fputc(cpu->R[a], stdout);
+        cpu->PC = cpu->PC+2;
     }
     else if((insn & 0xF000) == 0xF){
         //HALT

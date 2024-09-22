@@ -280,7 +280,7 @@ int emulate(struct cpu *cpu)
     }
     else if((insn & 0xF000) == 0x6000){
         //JMP_ABS
-        int op_val = c;
+        int op_val = op;
         if(op_val >= 7){
             return 1;
         }
@@ -357,19 +357,19 @@ int emulate(struct cpu *cpu)
         return 0;
     }
     else if((insn & 0xF000) == 0x7000){
-        int op_val = c;
+        int op_val = op;
         if(op_val >= 7){
             return 1;
         }
         switch(op_val){
             case 0x00:
                 //JMP
-                cpu->PC = load2(cpu,cpu->R[a]);
+                cpu->PC = cpu->R[a];
                 break;
             case 0x01:
                 //JMP_Z
                 if(cpu->Z == 1){
-                    cpu->PC = load2(cpu,cpu->R[a]);
+                    cpu->PC = cpu->R[a];
                 }
                 else{
                     cpu->PC = cpu->PC+2;
@@ -378,7 +378,7 @@ int emulate(struct cpu *cpu)
             case 0x02:
                 //JMP_NZ
                 if(cpu->Z != 0){
-                    cpu->PC = load2(cpu,cpu->R[a]);
+                    cpu->PC = cpu->R[a];
 
                 }
                 else{
@@ -389,7 +389,7 @@ int emulate(struct cpu *cpu)
             case 0x03:
                 //JMP_LT
                 if(cpu->N == 1){
-                    cpu->PC = load2(cpu,cpu->R[a]);
+                    cpu->PC = cpu->R[a];
                 }
                 else{
                     cpu->PC = cpu->PC+2;
@@ -399,7 +399,7 @@ int emulate(struct cpu *cpu)
             case 0x04:
                 //JMP_GT
                 if(cpu->N == 0 && cpu->Z == 0){
-                    cpu->PC = load2(cpu,cpu->R[a]);
+                    cpu->PC = cpu->R[a];
                 }
                 else{
                     cpu->PC = cpu->PC+2;
@@ -409,7 +409,7 @@ int emulate(struct cpu *cpu)
             case 0x05:
                 //JMP_LE
                 if(cpu->N == 1 || cpu->Z == 1){
-                    cpu->PC = load2(cpu,cpu->R[a]);
+                    cpu->PC = cpu->R[a];
                 }
                 else{
                     cpu->PC = cpu->PC+2;
@@ -419,7 +419,7 @@ int emulate(struct cpu *cpu)
             case 0x06:
                 //JMP_GE
                 if(cpu->N == 0 && cpu->Z == 1){
-                    cpu->PC = load2(cpu,cpu->R[a]);
+                    cpu->PC = cpu->R[a];
                 }
                 else{
                     cpu->PC = cpu->PC+2;
@@ -447,39 +447,43 @@ int emulate(struct cpu *cpu)
         cpu->R[cpu->PC] = load2(cpu,cpu->R[a]);
         return 0;
     }
-    else if((insn & 0xF000) == 0xA ){
+    else if((insn & 0xF000) == 0xA000 ){
         //RET
         cpu->PC = load2(cpu,cpu->SP);
         cpu->SP = cpu->SP + 2;
         return 0;
     }
-    else if((insn & 0xF000) == 0xB){
+    else if((insn & 0xF000) == 0xB000){
         //PUSH
         uint16_t res;
         cpu->SP = cpu->SP - 2;
-        res = load2(cpu,cpu->R[a]);
+        res = cpu->R[a];
         store2(cpu,res,cpu->SP);
+        cpu->PC = cpu->PC+2;
         return 0;
     }
-    else if((insn & 0xF000) == 0xC){
+    else if((insn & 0xF000) == 0xC000){
         //POP
         uint16_t res;
         res = load2(cpu,cpu->SP);
-        store2(cpu,res,cpu->R[a]);
+        cpu->R[a] = res;
         cpu->SP = cpu->SP + 2;
+        cpu->PC = cpu->PC+2;
         return 0;
     }
-    else if((insn & 0xF000) == 0xD){
+    else if((insn & 0xF000) == 0xD000){
         //IN
         cpu->R[a] = fgetc(stdin);
         cpu->PC = cpu->PC+2;
+        return 0;
     }
-    else if((insn & 0xF000) == 0xE){
+    else if((insn & 0xF000) == 0xE000){
         //OUT
         fputc(cpu->R[a], stdout);
         cpu->PC = cpu->PC+2;
+        return 0;
     }
-    else if((insn & 0xF000) == 0xF){
+    else if((insn & 0xF000) == 0xF000){
         //HALT
         return 1;
     }

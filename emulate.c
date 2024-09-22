@@ -280,31 +280,155 @@ int emulate(struct cpu *cpu)
     }
     else if((insn & 0xF000) == 0x6000){
         //JMP_ABS
-        int op_val = (insn & 0x0F00) << 4;
+        int op_val = c;
         if(op_val >= 7){
             return 1;
         }
         switch(op_val){
+            case 0x00:
+                //JMP
+                cpu->PC = load2(cpu,cpu->PC+2);
+                break;
             case 0x01:
                 //JMP_Z
+                if(cpu->Z == 1){
+                    cpu->PC = load2(cpu,cpu->PC+2);
+                }
+                else{
+                    cpu->PC = cpu->PC+4;
+                }
                 break;
             case 0x02:
                 //JMP_NZ
+                if(cpu->Z != 0){
+                    cpu->PC = load2(cpu,cpu->PC+2);
+
+                }
+                else{
+                    cpu->PC = cpu->PC+4;
+
+                }
                 break;
             case 0x03:
                 //JMP_LT
+                if(cpu->N == 1){
+                    cpu->PC = load2(cpu,cpu->PC+2);
+                }
+                else{
+                    cpu->PC = cpu->PC+4;
+
+                }
                 break;
             case 0x04:
                 //JMP_GT
+                if(cpu->N == 0 && cpu->Z == 0){
+                    cpu->PC = load2(cpu,cpu->PC+2);
+                }
+                else{
+                    cpu->PC = cpu->PC+4;
+
+                }
                 break;
             case 0x05:
                 //JMP_LE
+                if(cpu->N == 1 || cpu->Z == 1){
+                    cpu->PC = load2(cpu,cpu->PC+2);
+                }
+                else{
+                    cpu->PC = cpu->PC+4;
+
+                }
                 break;
             case 0x06:
                 //JMP_GE
+                if(cpu->N == 0 && cpu->Z == 1){
+                    cpu->PC = load2(cpu,cpu->PC+2);
+                }
+                else{
+                    cpu->PC = cpu->PC+4;
+
+                }
                 break;
             default:
-                //Unconditional JMP
+                //illegal instruction or error otherwise
+                cpu->PC = cpu->PC+4;
+                break;
+        }
+        return 0;
+    }
+    else if((insn & 0xF000) == 0x7000){
+        int op_val = c;
+        if(op_val >= 7){
+            return 1;
+        }
+        switch(op_val){
+            case 0x00:
+                //JMP
+                cpu->PC = load2(cpu,cpu->R[a]);
+                break;
+            case 0x01:
+                //JMP_Z
+                if(cpu->Z == 1){
+                    cpu->PC = load2(cpu,cpu->R[a]);
+                }
+                else{
+                    cpu->PC = cpu->PC+2;
+                }
+                break;
+            case 0x02:
+                //JMP_NZ
+                if(cpu->Z != 0){
+                    cpu->PC = load2(cpu,cpu->R[a]);
+
+                }
+                else{
+                    cpu->PC = cpu->PC+2;
+
+                }
+                break;
+            case 0x03:
+                //JMP_LT
+                if(cpu->N == 1){
+                    cpu->PC = load2(cpu,cpu->R[a]);
+                }
+                else{
+                    cpu->PC = cpu->PC+2;
+
+                }
+                break;
+            case 0x04:
+                //JMP_GT
+                if(cpu->N == 0 && cpu->Z == 0){
+                    cpu->PC = load2(cpu,cpu->R[a]);
+                }
+                else{
+                    cpu->PC = cpu->PC+2;
+
+                }
+                break;
+            case 0x05:
+                //JMP_LE
+                if(cpu->N == 1 || cpu->Z == 1){
+                    cpu->PC = load2(cpu,cpu->R[a]);
+                }
+                else{
+                    cpu->PC = cpu->PC+2;
+
+                }
+                break;
+            case 0x06:
+                //JMP_GE
+                if(cpu->N == 0 && cpu->Z == 1){
+                    cpu->PC = load2(cpu,cpu->R[a]);
+                }
+                else{
+                    cpu->PC = cpu->PC+2;
+
+                }
+                break;
+            default:
+                //illegal instruction or error otherwise
+                cpu->PC = cpu->PC+2;
                 break;
         }
         return 0;

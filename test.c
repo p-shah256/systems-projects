@@ -433,7 +433,6 @@ void JMP_uncod_addr(struct cpu *cpu) {
     unsigned int conditional = 0b000;
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, conditional, 0b000, 0b000, 0b000);
-    // uint16_t instruction = *((uint16_t*)binary_to_hex(insn, conditional, 0b000, 0b000, 0b000));
     printf("inst: 0x%04X\n", instruction);
 
     zerocpu(cpu);
@@ -449,6 +448,7 @@ void JMP_uncoditional_reg(struct cpu *cpu) {
     zerocpu(cpu);
     // 0111 000 000 000 100
     uint16_t instruction = 0x7004;
+    printf("inst: 0x%04X\n", instruction);
     store2(cpu, instruction, 0);
     cpu->R[4] = 0x1234;
     int val = emulate(cpu);
@@ -460,6 +460,7 @@ void JMP_Z_addr(struct cpu *cpu) {
     zerocpu(cpu);
     // 0110 001 000 000 000
     uint16_t instruction = 0x6200;
+    printf("inst: 0x%04X\n", instruction);
     store2(cpu, instruction, 0);
     cpu->Z = 1;
     // so it should jump
@@ -471,6 +472,7 @@ void JMP_Z_addr(struct cpu *cpu) {
 
     zerocpu(cpu);
     uint16_t instruction2 = 0x6200;
+    printf("inst: 0x%04X\n", instruction);
     store2(cpu, instruction, 0);
     cpu->Z = 0;
     // so it should NOT jump
@@ -503,6 +505,7 @@ void JMP_Z_reg(struct cpu *cpu) {
     zerocpu(cpu);
     cpu->Z = 0;
     store2(cpu, instruction, 0);
+    printf("inst: 0x%04X\n", instruction);
     cpu->R[4] = addr;
     int val2 = emulate(cpu);
     assert(val2 == 0);
@@ -514,6 +517,7 @@ void JMP_NZ_addr(struct cpu *cpu) {
     unsigned int conditional = 0b010;
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, conditional, 0b000, 0b000, 0b000);
+    printf("inst: 0x%04X\n", instruction);
 
     // SHOULD JUMP -------------------------
     zerocpu(cpu);
@@ -528,6 +532,7 @@ void JMP_NZ_addr(struct cpu *cpu) {
     zerocpu(cpu);
     cpu->Z = 1;
     store2(cpu, instruction, 0);
+    printf("inst: 0x%04X\n", instruction);
     store2(cpu, addr, 2);   
     int val2 = emulate(cpu);
     // assert(val == 0);
@@ -540,6 +545,7 @@ void JMP_NZ_reg(struct cpu *cpu) {
     unsigned int reg = 0b100; // 4
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, conditional, 0b000, 0b000, reg);
+    printf("inst: 0x%04X\n", instruction);
 
     // SHOULD JUMP -------------------------
     zerocpu(cpu);
@@ -565,6 +571,7 @@ void JMP_LT_addr(struct cpu *cpu) {
     unsigned int conditional = 0b011;
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, conditional, 0b000, 0b000, 0b000);
+    printf("inst: 0x%04X\n", instruction);
 
     // SHOULD JUMP -------------------------
     zerocpu(cpu);
@@ -591,6 +598,7 @@ void JMP_LT_reg(struct cpu *cpu) {
     unsigned int reg = 0b100; // 4
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, conditional, 0b000, 0b000, reg);
+    printf("inst: 0x%04X\n", instruction);
 
     // SHOULD JUMP -------------------------
     zerocpu(cpu);
@@ -616,6 +624,7 @@ void JMP_GT_addr(struct cpu *cpu) {
     unsigned int conditional = 0b100;
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, conditional, 0b000, 0b000, 0b000);
+    printf("inst: 0x%04X\n", instruction);
 
     // SHOULD JUMP -------------------------
     zerocpu(cpu);
@@ -644,6 +653,7 @@ void JMP_GT_reg(struct cpu *cpu) {
     unsigned int reg = 0b100; // 4
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, conditional, 0b000, 0b000, reg);
+    printf("inst: 0x%04X\n", instruction);
 
     // SHOULD JUMP -------------------------
     zerocpu(cpu);
@@ -671,6 +681,7 @@ void JMP_LE_addr(struct cpu *cpu) {
     unsigned int conditional = 0b101;
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, conditional, 0b000, 0b000, 0b000);
+    printf("inst: 0x%04X\n", instruction);
 
     // SHOULD JUMP -------------------------
     zerocpu(cpu);
@@ -699,6 +710,7 @@ void JMP_LE_reg(struct cpu *cpu) {
     unsigned int reg = 0b100; // 4
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, conditional, 0b000, 0b000, reg);
+    printf("inst: 0x%04X\n", instruction);
 
     // SHOULD JUMP -------------------------
     zerocpu(cpu);
@@ -726,6 +738,7 @@ void JMP_GE_addr(struct cpu *cpu) {
     unsigned int conditional = 0b110;
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, conditional, 0b000, 0b000, 0b000);
+    printf("inst: 0x%04X\n", instruction);
 
     // SHOULD JUMP -------------------------
     zerocpu(cpu);
@@ -752,6 +765,7 @@ void JMP_GE_reg(struct cpu *cpu) {
     unsigned int reg = 0b100; // 4
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, conditional, 0b000, 0b000, reg);
+    printf("inst: 0x%04X\n", instruction);
 
     // SHOULD JUMP -------------------------
     zerocpu(cpu);
@@ -778,6 +792,7 @@ void CALL_addr(struct cpu *cpu) {
     unsigned int insn = 0b1000;
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, 0b000);
+    printf("inst: 0x%04X\n", instruction);
 
     zerocpu(cpu);
     uint16_t initialSP = cpu->SP;
@@ -798,6 +813,7 @@ void CALL_reg(struct cpu *cpu) {
     unsigned int reg = 0b001;
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, reg);
+    printf("inst: 0x%04X\n", instruction);
 
     zerocpu(cpu);
     uint16_t initialSP = cpu->SP;
@@ -819,6 +835,7 @@ void RET(struct cpu *cpu) {
     uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, 0b000);
     uint16_t initialSP = 0x1000;
     uint16_t returnAddr = 0x5678;
+    printf("inst: 0x%04X\n", instruction);
 
     zerocpu(cpu);
     cpu->SP = initialSP;
@@ -842,6 +859,7 @@ void PUSH_stack(struct cpu *cpu) {
     unsigned int reg = 0b001;
     uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, reg);
     uint16_t valAtRa = 0x1234;
+    printf("inst: 0x%04X\n", instruction);
 
     zerocpu(cpu);
     cpu->R[1] = valAtRa;
@@ -862,6 +880,7 @@ void POP_stack(struct cpu *cpu) {
     unsigned int reg = 0b001;
     uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, reg);
     uint16_t valAtStack = 0x1234;
+    printf("inst: 0x%04X\n", instruction);
 
     zerocpu(cpu);
     uint16_t initalSp = cpu->SP;
@@ -880,7 +899,7 @@ void POP_stack(struct cpu *cpu) {
 void HALT(struct cpu *cpu) {
     unsigned int insn = 0b1111;
     uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, 0000);
-
+    printf("inst: 0x%04X\n", instruction);
     zerocpu(cpu);
     store2(cpu, instruction, cpu->PC);
 
@@ -940,7 +959,14 @@ int main(int argc, char **argv) {
 
     // run_test("CALL_addr", CALL_addr, &cpu);       // DOES NOT PASS
     // run_test("CALL_reg", CALL_reg, &cpu);       // DOES NOT PASS
-    
+
+
+    run_test("CALL_reg", CALL_reg, &cpu);       // PASS
+    run_test("CALL_addr", CALL_addr, &cpu);       // PASS
+    run_test("RET", RET, &cpu);       // PASS
+    run_test("PUSH_stack", PUSH_stack, &cpu);       // PASS
+    run_test("POP_stack", POP_stack, &cpu);       // PASS
+    run_test("HALT", HALT, &cpu);       // PASS
 
 
     printf("all tests PASS\n");

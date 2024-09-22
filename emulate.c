@@ -3,7 +3,6 @@
  * description: solution to Lab 1
  */
 
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -25,6 +24,8 @@ void store2(struct cpu *cpu, uint16_t data, uint16_t addr) {
 uint16_t load2(struct cpu *cpu, uint16_t addr) {
     return (cpu->memory[addr] | (cpu->memory[addr+1] << 8));
 }
+
+
 /* emulate(struct cpu*) - emulate a single instruction
  *     - returns 1 for halt, 0 for no halt 
  */
@@ -45,6 +46,7 @@ int emulate(struct cpu *cpu)
         return 0;
         //set
     }
+    //LOAD x2000 if loading constant from 16 bit word
     else if ((insn & 0xF000) == 0x2000) {
         int is_indirect = ((insn & 0x0800) != 0);
         int is_byte = ((insn & 0x0400) != 0);
@@ -52,25 +54,32 @@ int emulate(struct cpu *cpu)
         //int is_indirect = ((insn & 0x0800) != 0);
         //int is_byte = ((insn & 0x0400) != 0);
         printf("indirect: %d isByte: %d",is_indirect,is_byte);
+        printf("store type : 0x%02X",((insn >> 8) & 0xFF));
+        printf("a:%d",a);
         //printf("");
         //LOAD
         //printf()
         if(is_indirect == 0 && is_byte == 0){
-            cpu->R[a] = load2(cpu,cpu->PC+2);
-
+            uint16_t valFromAddr = load2(cpu,cpu->PC+2);
+            cpu->R[a] = load2(cpu,valFromAddr);
+            cpu->PC = cpu->PC+4;
         }
         else if(is_byte == 1 && is_indirect == 0){
-            cpu->R[a] = cpu->memory[(cpu->PC+2)+1]<<8;
+            uint16_t valFromAddr = load2(cpu,cpu->PC+2);
+            cpu->R[a] = cpu->memory[valFromAddr];
+            cpu->PC = cpu->PC+4;
         }
         else if(is_byte == 0 && is_indirect == 1 ){
             //0x2800
             cpu->R[a] = load2(cpu,cpu->R[b]);
+            cpu->PC = cpu->PC+2;
         }
         else{
             //if indirec and is byte are 0 then 0x2C00
-            cpu->R[a] = cpu->memory[(cpu->R[b])+1] << 8;
+            cpu->R[a] = cpu->memory[(cpu->R[b])];
+            cpu->PC = cpu->PC+2;
         }
-        cpu->PC = cpu->PC+4;
+        
         return 0;
     }
     else if((insn & 0xF000) == 0x3000){
@@ -86,25 +95,28 @@ int emulate(struct cpu *cpu)
             cpu->PC = cpu->PC + 4;
         }
         else if(((insn & 0xFF00) >> 8) == 0x34){
-            //cpu->memory[cpu->PC+2] = cpu->memory[cpu->R[a]+1] << 8;
+                    //cpu->memory[cpu->PC+2] = cpu->memory[cpu->R[a]+1] << 8;
             uint16_t addrVal = load2(cpu,cpu->PC+2);
             uint16_t rVal = cpu->R[a];
-            cpu->memory[addrVal+1] = (rVal >> 8) & 0xFF;
+            rVal = rVal & 0xFF;
+            cpu->memory[addrVal+1] = rVal;
             cpu->PC = cpu->PC + 4;
-        }
+            }
         else if(((insn & 0xFF00) >> 8) == 0x3C){
-            //uint16_t addrVal = load2(cpu,cpu->PC+2);
-            uint16_t rVal = cpu->R[a];
-            cpu->memory[cpu->R[b]] = cpu->memory[rVal+1] << 8;
+                //uint16_t addrVal = load2(cpu,cpu->PC+2);
+            uint16_t rAddress = cpu->R[a];
+            uint16_t addressToLoadInto = cpu->R[b];
+            uint16_t valueAtRSrc = load2(cpu, rAddress);
+            cpu->memory[cpu->R[b]] = valueAtRSrc & 0x00FF;
             cpu->PC = cpu->PC + 2;
-        }
+            }
         else{
-            //0x3800
+                    //0x3800
             uint16_t rVal = cpu->R[a];
             uint16_t addressToLoadInto = cpu->R[b];
             store2(cpu, rVal,addressToLoadInto);
             cpu->PC = cpu->PC + 2;
-        }
+            }
         
         return 0;
     }
@@ -120,64 +132,147 @@ int emulate(struct cpu *cpu)
     }
     else if((insn & 0xF000) == 0x5000){
         //ALU
+        uint16_t shiftA;
+        uint16_t shiftB;
+        uint16_t res;
         int aluOp = (insn & 0x0E00);
         switch (aluOp) {
             case 0x0200:
                 //SUB
-                cpu->R[c] = cpu->R[a] - cpu->R[b];
-                break;
-            case 0x0400:
-                //AND
-                cpu->R[c] = cpu->R[a] & cpu->R[b];
-                break;
-            case 0x0600:
-                //OR
-                cpu->R[b] = cpu->R[a] | cpu->R[b];
-                break;
-            case 0x0800:
-                //XOR
-                cpu->R[c] = cpu->R[a] ^ cpu->R[b];
-                break;
-            case 0x0A00:
-                //SHIFT R
-                cpu->R[b] = cpu->R[a] >> cpu->R[b];
-                break;
-            case 0x0C00:
-                //CMP
-                //uint16_t val = cpu->R[a] - cpu->R[b];
-                
-                //int is_negative = (val & 0x8000) != 0;
-                if(cpu->R[a] - cpu->R[b] < 0){
-                    cpu->Z = 0;
-                    cpu->N = 1;
-                }
-                else if(cpu->R[a] - cpu->R[b] == 0){
+                //uint16_t
+                store2(cpu,load2(cpu,cpu->R[a]) - load2(cpu,cpu->R[b]),cpu->R[c]);
+                res = load2(cpu,cpu->R[c]);
+                if(res == 0){
                     cpu->Z = 1;
-                    cpu->N = 0;
                 }
                 else{
                     cpu->Z = 0;
+                }
+                if((res & 0x8000) != 0){
+                    cpu->N = 1;
+                }
+                else{
+                    cpu->N = 0;
+                }
+                break;
+            case 0x0400:
+                //AND
+                store2(cpu,load2(cpu,cpu->R[a]) & load2(cpu,cpu->R[b]),cpu->R[c]);
+                res = load2(cpu,cpu->R[c]);
+                if(res == 0){
+                    cpu->Z = 1;
+                }
+                else{
+                    cpu->Z = 0;
+                }
+                if((res & 0x8000) != 0){
+                    cpu->N = 1;
+                }
+                else{
+                    cpu->N = 0;
+                }
+                break;
+            case 0x0600:
+                //OR
+                store2(cpu,load2(cpu,cpu->R[a]) | load2(cpu,cpu->R[b]),cpu->R[c]);
+                res = load2(cpu,cpu->R[c]);
+                if(res == 0){
+                    cpu->Z = 1;
+                }
+                else{
+                    cpu->Z = 0;
+                }
+                if((res & 0x8000) != 0){
+                    cpu->N = 1;
+                }
+                else{
+                    cpu->N = 0;
+                }
+                break;
+            case 0x0800:
+                //XOR
+                store2(cpu,load2(cpu,cpu->R[a]) ^ load2(cpu,cpu->R[b]),cpu->R[c]);
+                res = load2(cpu,cpu->R[c]);
+                if(res == 0){
+                    cpu->Z = 1;
+                }
+                else{
+                    cpu->Z = 0;
+                }
+                if((res & 0x8000) != 0){
+                    cpu->N = 1;
+                }
+                else{
+                    cpu->N = 0;
+                }
+                break;
+            case 0x0A00:
+                //SHIFT R
+                shiftA =load2(cpu,cpu->R[a]);
+                shiftB =load2(cpu,cpu->R[b]);
+                store2(cpu, (shiftA >> shiftB) ,cpu->R[c]);
+                res = load2(cpu,cpu->R[c]);
+                if(res == 0){
+                    cpu->Z = 1;
+                }
+                else{
+                    cpu->Z = 0;
+                }
+                if((res & 0x8000) != 0){
+                    cpu->N = 1;
+                }
+                else{
+                    cpu->N = 0;
+                }
+                break;
+            case 0x0C00:
+                //CMP
+                res = load2(cpu,cpu->R[a]) - load2(cpu,cpu->R[b]);
+                if(res == 0){
+                    cpu->Z = 1;
+                }
+                else{
+                    cpu->Z = 0;
+                }
+                if((res & 0x8000) != 0){
+                    cpu->N = 1;
+                }
+                else{
                     cpu->N = 0;
                 }
                 break;
             case 0x0E00:
                 //TEST
-                if(cpu->R[a] > 0){
-                    cpu->Z = 0;
-                    cpu->N = 0;
-                }
-                else if(cpu->R[a] == 0){
+                res = load2(cpu,cpu->R[a]);
+                int is_negative = (res & 0x8000) != 0;
+                if(res == 0){
                     cpu->Z = 1;
-                    cpu->N = 0;
                 }
                 else{
                     cpu->Z = 0;
+                }
+                if(is_negative){
                     cpu->N = 1;
+                }
+                else{
+                    cpu->N = 0;
                 }
                 break;
             default:
-                //ADD
-                cpu->R[c] = cpu->R[a] + cpu->R[b];
+                store2(cpu,load2(cpu,cpu->R[b]) + load2(cpu,cpu->R[a]),cpu->R[c]);
+                res = load2(cpu,cpu->R[c]);
+                if(res == 0){
+                    cpu->Z = 1;
+                }
+                else{
+                    cpu->Z = 0;
+                }
+                if((res & 0x8000) != 0){
+                    cpu->N = 1;
+                }
+                else{
+                    cpu->N = 0;
+                }
                 break;
         }
         cpu->PC = cpu->PC+2;

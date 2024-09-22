@@ -908,13 +908,43 @@ void POP_stack(struct cpu *cpu) {
 
 void HALT(struct cpu *cpu) {
     unsigned int insn = 0b1111;
-    uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, 0000);
+    uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, 0b000);
     printf("inst: 0x%04X\n", instruction);
     zerocpu(cpu);
     store2(cpu, instruction, cpu->PC);
 
     int val = emulate(cpu);
     assert(val == 1);
+}
+
+void MOVE_reg(struct cpu *cpu) {
+    // 0100 0000 0010 0001
+    uint16_t instruction = 0x4021;
+    printf("inst: 0x%04X\n", instruction);
+    zerocpu(cpu);
+    uint16_t valOne = 0x1234;
+    uint16_t valTwo = 0x3332;
+    cpu->R[1] = valOne;
+    cpu->R[2] = valTwo;
+    store2(cpu, instruction, cpu->PC);
+
+    int val = emulate(cpu);
+    assert(val == 0);
+    assert(cpu->R[1] == cpu->R[2]);
+}
+
+void MOVE_stack(struct cpu *cpu) {
+    // 0100 0000 1000 0001
+    uint16_t instruction = 0x4081;
+    printf("inst: 0x%04X\n", instruction);
+    zerocpu(cpu);
+    uint16_t valOne = 0x1234;
+    cpu->R[1] = valOne;
+    store2(cpu, instruction, cpu->PC);
+
+    int val = emulate(cpu);
+    assert(val == 0);
+    assert(load2(cpu, cpu->SP)==valOne);
 }
 
 
@@ -977,6 +1007,10 @@ int main(int argc, char **argv) {
     run_test("PUSH_stack", PUSH_stack, &cpu);       // PASS
     run_test("POP_stack", POP_stack, &cpu);       // PASS
     run_test("HALT", HALT, &cpu);       // PASS
+    
+
+    run_test("MOVE_reg", MOVE_reg, &cpu);       // PASS
+    run_test("MOVE_stack", MOVE_stack, &cpu);       // PASS
 
 
     printf("all tests PASS\n");

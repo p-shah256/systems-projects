@@ -469,7 +469,7 @@ void JMP_Z_addr(struct cpu *cpu) {
     store2(cpu, address, 2);
     int val = emulate(cpu);
     assert(val == 0);
-    assert((cpu->PC = 0x1234));
+    assert((cpu->PC = address));
 
     zerocpu(cpu);
     uint16_t instruction2 = 0x6200;
@@ -523,7 +523,7 @@ void JMP_NZ_addr(struct cpu *cpu) {
     store2(cpu, addr, 2);
     int val = emulate(cpu);
     // assert(val == 0);
-    assert((cpu->PC = 0x1234));
+    assert((cpu->PC = addr));
 
     // SHOULD NOT JUMP -------------------------
     zerocpu(cpu);
@@ -574,7 +574,7 @@ void JMP_LT_addr(struct cpu *cpu) {
     store2(cpu, addr, 2);
     int val = emulate(cpu);
     assert(val == 0);
-    assert((cpu->PC = 0x1234));
+    assert((cpu->PC = addr));
 
     // SHOULD NOT JUMP -------------------------
     zerocpu(cpu);
@@ -626,7 +626,7 @@ void JMP_GT_addr(struct cpu *cpu) {
     store2(cpu, addr, 2);
     int val = emulate(cpu);
     assert(val == 0);
-    assert((cpu->PC = 0x1234));
+    assert((cpu->PC = addr));
 
     // SHOULD NOT JUMP -------------------------
     zerocpu(cpu);
@@ -681,7 +681,7 @@ void JMP_LE_addr(struct cpu *cpu) {
     store2(cpu, addr, 2);
     int val = emulate(cpu);
     assert(val == 0);
-    assert((cpu->PC = 0x1234));
+    assert((cpu->PC = addr));
 
     // SHOULD NOT JUMP -------------------------
     zerocpu(cpu);
@@ -735,7 +735,7 @@ void JMP_GE_addr(struct cpu *cpu) {
     store2(cpu, addr, 2);
     int val = emulate(cpu);
     assert(val == 0);
-    assert((cpu->PC = 0x1234));
+    assert((cpu->PC = addr));
 
     // SHOULD NOT JUMP -------------------------
     zerocpu(cpu);
@@ -775,44 +775,44 @@ void JMP_GE_reg(struct cpu *cpu) {
 
 
 
+void CALL_addr(struct cpu *cpu) {
+    unsigned int insn = 0b1000;
+    uint16_t addr = 0x1234;
+    uint16_t instruction = *binary_to_hex(insn, 0b000, 0b000, 0b000, 0b000);
 
+    zerocpu(cpu);
+    uint16_t initialSP = cpu->SP;
+    uint16_t initialPC = cpu->PC;
 
+    store2(cpu, instruction, initialPC);
+    store2(cpu, addr, initialPC + 2);
 
+    int val = emulate(cpu);
+    assert(val == 0);
+    assert(cpu->PC == addr);
+    assert(cpu->SP == initialSP - 2);
+    assert(load2(cpu, cpu->SP) == initialPC + 4); // Check if return address is correct
+}
 
+void CALL_reg(struct cpu *cpu) {
+    unsigned int insn = 0b1001;
+    unsigned int reg = 0b001;
+    uint16_t addr = 0x1234;
+    uint16_t instruction = *binary_to_hex(insn, 0b000, 0b000, 0b000, reg);
 
+    zerocpu(cpu);
+    uint16_t initialSP = cpu->SP;
+    uint16_t initialPC = cpu->PC;
+    cpu->R[1] = addr;
 
+    store2(cpu, instruction, initialPC);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    int val = emulate(cpu);
+    assert(val == 0);
+    assert(cpu->PC == addr);
+    assert(cpu->SP == initialSP - 2);
+    assert(load2(cpu, cpu->SP) == initialPC + 2); // Check if return address is correct
+}
 
 
 
@@ -867,6 +867,11 @@ int main(int argc, char **argv) {
     // run_test("JMP_LE_addr", JMP_LE_addr, &cpu);               // emulate does not return 0;
     // run_test("JMP_GE_reg", JMP_GE_reg, &cpu);               // DOES NOT PASS
     // run_test("JMP_GE_addr", JMP_GE_addr, &cpu);               // emulate does not return 0;
+
+    // run_test("CALL_addr", CALL_addr, &cpu);       // DOES NOT PASS
+    // run_test("CALL_reg", CALL_reg, &cpu);       // DOES NOT PASS
+    
+
 
     printf("all tests PASS\n");
 }

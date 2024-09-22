@@ -725,7 +725,7 @@ void JMP_LE_reg(struct cpu *cpu) {
     // SHOULD NOT JUMP -------------------------
     zerocpu(cpu);
     cpu->N = 0;
-    cpu->Z = 1;
+    cpu->Z = 0;
     store2(cpu, instruction, 0);
     cpu->R[4] = addr;
     int val2 = emulate(cpu);
@@ -983,35 +983,30 @@ int main(int argc, char **argv) {
     run_test("ALU_CMP", test_ALU_CMP, &cpu);
     run_test("ALU_TEST", test_ALU_TEST, &cpu);  // Note: passes but unsure of checking the complement
     run_test("JMP_uncond_addr", JMP_uncod_addr, &cpu);       // PASS
-    // run_test("JUMP_unconditional_register", JMP_uncoditional_reg, &cpu);             // emulate does not return 0;
-    // run_test("JMP_Z_addr", JMP_Z_addr, &cpu);                                        // emulate does not return 0;
-    // run_test("JMP_Z_reg", JMP_Z_reg, &cpu);                                          // emulate does not return 0;
-    // run_test("JMP_NZ_addr", JMP_NZ_addr, &cpu);                                      // emulate does not return 0;
-    // run_test("JMP_NZ_reg", JMP_NZ_addr, &cpu);               // PASS
-    // run_test("JMP_LT_reg", JMP_LT_reg, &cpu);                                        // DOES NOT PASS
-    // run_test("JMP_LT_addr", JMP_LT_addr, &cpu);                                      // emulate does not return 0;
-    // run_test("JMP_GT_reg", JMP_GT_reg, &cpu);                // DOES NOT PASS
-    // run_test("JMP_GT_addr", JMP_GT_addr, &cpu);              // DOES NOT PASS
-    // run_test("JMP_LE_reg", JMP_LE_reg, &cpu);               // DOES NOT PASS
-    // run_test("JMP_LE_addr", JMP_LE_addr, &cpu);               // emulate does not return 0;
-    // run_test("JMP_GE_reg", JMP_GE_reg, &cpu);               // DOES NOT PASS
-    // run_test("JMP_GE_addr", JMP_GE_addr, &cpu);               // emulate does not return 0;
+    run_test("JUMP_unconditional_register", JMP_uncoditional_reg, &cpu);
+    run_test("JMP_Z_addr", JMP_Z_addr, &cpu);
+    run_test("JMP_Z_reg", JMP_Z_reg, &cpu);
+    run_test("JMP_NZ_addr", JMP_NZ_addr, &cpu);
+    run_test("JMP_NZ_reg", JMP_NZ_addr, &cpu);
+    run_test("JMP_LT_reg", JMP_LT_reg, &cpu);
+    run_test("JMP_LT_addr", JMP_LT_addr, &cpu);
+    run_test("JMP_GT_reg", JMP_GT_reg, &cpu);
+    run_test("JMP_GT_addr", JMP_GT_addr, &cpu);
+    run_test("JMP_LE_reg", JMP_LE_reg, &cpu);
+    run_test("JMP_LE_addr", JMP_LE_addr, &cpu);
+    run_test("JMP_GE_reg", JMP_GE_reg, &cpu);
+    run_test("JMP_GE_addr", JMP_GE_addr, &cpu);
 
     // run_test("CALL_addr", CALL_addr, &cpu);       // DOES NOT PASS
     // run_test("CALL_reg", CALL_reg, &cpu);       // DOES NOT PASS
 
-
-    // run_test("CALL_reg", CALL_reg, &cpu);       // PASS
-    // run_test("CALL_addr", CALL_addr, &cpu);       // PASS
-    // run_test("RET", RET, &cpu);       // PASS
-    run_test("PUSH_stack", PUSH_stack, &cpu);       // PASS
-    run_test("POP_stack", POP_stack, &cpu);       // PASS
-    run_test("HALT", HALT, &cpu);       // PASS
-    
+    run_test("RET", RET, &cpu);
+    run_test("PUSH_stack", PUSH_stack, &cpu);
+    run_test("POP_stack", POP_stack, &cpu);
+    run_test("HALT", HALT, &cpu);
 
     run_test("MOVE_reg", MOVE_reg, &cpu);       // PASS
     run_test("MOVE_stack", MOVE_stack, &cpu);       // PASS
-
 
     printf("all tests PASS\n");
 }

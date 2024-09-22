@@ -341,7 +341,7 @@ int emulate(struct cpu *cpu)
                 break;
             case 0x06:
                 //JMP_GE
-                if(cpu->N == 0 && cpu->Z == 1){
+                if(cpu->N == 0){
                     cpu->PC = load2(cpu,cpu->PC+2);
                 }
                 else{
@@ -418,7 +418,7 @@ int emulate(struct cpu *cpu)
                 break;
             case 0x06:
                 //JMP_GE
-                if(cpu->N == 0 && cpu->Z == 1){
+                if(cpu->N == 0){
                     cpu->PC = cpu->R[a];
                 }
                 else{

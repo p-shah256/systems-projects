@@ -491,7 +491,8 @@ int emulate(struct cpu *cpu)
     }
     else if((insn & 0xF000) == 0xE000){
         //OUT
-        fputc(cpu->R[a], stdout);
+        uint16_t output = cpu->R[a];
+        fputc(output, stdout);
         cpu->PC = cpu->PC+2;
         return 0;
     }

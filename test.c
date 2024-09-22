@@ -815,6 +815,68 @@ void CALL_reg(struct cpu *cpu) {
 }
 
 
+void RET(struct cpu *cpu) {
+    unsigned int insn = 0b1010;
+    uint16_t instruction = *binary_to_hex(insn, 0b000, 0b000, 0b000, 0b000);
+    uint16_t initialSP = 0x1000;
+    uint16_t returnAddr = 0x5678;
+
+    zerocpu(cpu);
+    cpu->SP = initialSP;
+    cpu->SP -= 2;
+    // set sp to as return addr
+    store2(cpu, returnAddr, cpu->SP);
+    store2(cpu, instruction, cpu->PC);
+
+
+    int val = emulate(cpu);
+    assert(val == 0);
+    //assert pc is back at return addr
+    assert(cpu->PC == returnAddr);
+    // assert decrement
+    assert(cpu->SP == initialSP);
+}
+
+// pushes the value in Ra into stack pointer and sp-=2;
+void PUSH_stack(struct cpu *cpu) {
+    unsigned int insn = 0b1011;
+    unsigned int reg = 0b001;
+    uint16_t instruction = *binary_to_hex(insn, 0b000, 0b000, 0b000, reg);
+    uint16_t valAtRa = 0x1234;
+
+    zerocpu(cpu);
+    cpu->R[1] = valAtRa;
+    uint16_t initalSp = cpu->SP;
+    uint16_t initalPC = cpu->PC;
+    store2(cpu, instruction, cpu->PC);
+
+    int val = emulate(cpu);
+    assert(val == 0);
+    assert(load2(cpu, cpu->SP)==valAtRa);
+    assert(cpu->SP == initalSp - 2);
+    assert(cpu->PC == initalPC + 2);
+}
+
+// POP reads value at SP and store in Ra
+void POP_stack(struct cpu *cpu) {
+    unsigned int insn = 0b1100;
+    unsigned int reg = 0b001;
+    uint16_t instruction = *binary_to_hex(insn, 0b000, 0b000, 0b000, reg);
+    uint16_t valAtStack = 0x1234;
+
+    zerocpu(cpu);
+    uint16_t initalSp = cpu->SP;
+    uint16_t initalPC = cpu->PC;
+    store2(cpu, instruction, cpu->PC);
+    cpu->SP -= 2;
+    store2(cpu, valAtStack, cpu->SP);
+
+    int val = emulate(cpu);
+    assert(val == 0);
+    assert(cpu->R[1]==valAtStack);
+    assert(cpu->SP == initalSp);
+    assert(cpu->PC == initalPC + 2);
+}
 
 
 

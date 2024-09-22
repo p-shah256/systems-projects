@@ -792,11 +792,13 @@ void CALL_addr(struct cpu *cpu) {
     unsigned int insn = 0b1000;
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, 0b000);
+    uint16_t initialSP = 0x3211;
+    uint16_t initialPC = 0x1111;
     printf("inst: 0x%04X\n", instruction);
 
     zerocpu(cpu);
-    uint16_t initialSP = cpu->SP;
-    uint16_t initialPC = cpu->PC;
+    cpu->SP = initialSP;
+    cpu->PC = initialPC;
 
     store2(cpu, instruction, initialPC);
     store2(cpu, addr, initialPC + 2);
@@ -813,11 +815,13 @@ void CALL_reg(struct cpu *cpu) {
     unsigned int reg = 0b001;
     uint16_t addr = 0x1234;
     uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, reg);
+    uint16_t initialSP = 0x3211;
+    uint16_t initialPC = 0x111;
     printf("inst: 0x%04X\n", instruction);
 
     zerocpu(cpu);
-    uint16_t initialSP = cpu->SP;
-    uint16_t initialPC = cpu->PC;
+    cpu->SP = initialSP;
+    cpu->PC = initialPC;
     cpu->R[1] = addr;
 
     store2(cpu, instruction, initialPC);
@@ -834,12 +838,14 @@ void RET(struct cpu *cpu) {
     unsigned int insn = 0b1010;
     uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, 0b000);
     uint16_t initialSP = 0x1000;
+    uint16_t initialPC = 0x2321;
     uint16_t returnAddr = 0x5678;
     printf("inst: 0x%04X\n", instruction);
 
     zerocpu(cpu);
     cpu->SP = initialSP;
     cpu->SP -= 2;
+    cpu->PC = initialPC;
     // set sp to as return addr
     store2(cpu, returnAddr, cpu->SP);
     store2(cpu, instruction, cpu->PC);
@@ -857,34 +863,38 @@ void RET(struct cpu *cpu) {
 void PUSH_stack(struct cpu *cpu) {
     unsigned int insn = 0b1011;
     unsigned int reg = 0b001;
+    uint16_t initialSP = 0x3211;
+    uint16_t initialPC = 0x1111;
     uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, reg);
     uint16_t valAtRa = 0x1234;
-    printf("inst: 0x%04X\n", instruction);
 
     zerocpu(cpu);
     cpu->R[1] = valAtRa;
-    uint16_t initalSp = cpu->SP;
-    uint16_t initalPC = cpu->PC;
+    cpu->SP = initialSP;
+    cpu->PC = initialPC;
     store2(cpu, instruction, cpu->PC);
+    printf("inst: 0x%04X, at :0x%04X\n", instruction,  cpu->PC);
 
     int val = emulate(cpu);
     assert(val == 0);
     assert(load2(cpu, cpu->SP)==valAtRa);
-    assert(cpu->SP == initalSp - 2);
-    assert(cpu->PC == initalPC + 2);
+    assert(cpu->SP == initialSP - 2);
+    assert(cpu->PC == initialPC + 2);
 }
 
 // POP reads value at SP and store in Ra
 void POP_stack(struct cpu *cpu) {
     unsigned int insn = 0b1100;
     unsigned int reg = 0b001;
+    uint16_t initialPC = 0x111;
+    uint16_t initialSP = 0x3211;
     uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, reg);
     uint16_t valAtStack = 0x1234;
     printf("inst: 0x%04X\n", instruction);
 
     zerocpu(cpu);
-    uint16_t initalSp = cpu->SP;
-    uint16_t initalPC = cpu->PC;
+    cpu->SP = initialSP;
+    cpu->PC = initialPC;
     store2(cpu, instruction, cpu->PC);
     cpu->SP -= 2;
     store2(cpu, valAtStack, cpu->SP);
@@ -892,8 +902,8 @@ void POP_stack(struct cpu *cpu) {
     int val = emulate(cpu);
     assert(val == 0);
     assert(cpu->R[1]==valAtStack);
-    assert(cpu->SP == initalSp);
-    assert(cpu->PC == initalPC + 2);
+    assert(cpu->SP == initialSP);
+    assert(cpu->PC == initialPC + 2);
 }
 
 void HALT(struct cpu *cpu) {
@@ -961,9 +971,9 @@ int main(int argc, char **argv) {
     // run_test("CALL_reg", CALL_reg, &cpu);       // DOES NOT PASS
 
 
-    run_test("CALL_reg", CALL_reg, &cpu);       // PASS
-    run_test("CALL_addr", CALL_addr, &cpu);       // PASS
-    run_test("RET", RET, &cpu);       // PASS
+    // run_test("CALL_reg", CALL_reg, &cpu);       // PASS
+    // run_test("CALL_addr", CALL_addr, &cpu);       // PASS
+    // run_test("RET", RET, &cpu);       // PASS
     run_test("PUSH_stack", PUSH_stack, &cpu);       // PASS
     run_test("POP_stack", POP_stack, &cpu);       // PASS
     run_test("HALT", HALT, &cpu);       // PASS

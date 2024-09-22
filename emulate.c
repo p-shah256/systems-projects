@@ -123,11 +123,21 @@ int emulate(struct cpu *cpu)
     else if((insn & 0xF000) == 0x4000){
         //MOVE
         //printf("s:%d d:%d",a,b);
-        uint8_t s = (insn >> 8 ) & 0x0F;
-        uint8_t d = (insn & 0XFF);
+        uint8_t s = insn & 0x0F;
+        uint8_t d = (insn >> 4) & 0x0F;
         printf("s: %d d: %d",s,d);
-        d &= 0x0F;
-        cpu->R[d] = cpu->R[s];
+        if(d == 8){
+            cpu->SP = cpu->R[s];
+        }
+        else if(s == 8){
+            cpu->R[d] = cpu->SP;
+        }
+        else{
+            cpu->R[d] = cpu->R[s];
+
+        }
+        cpu->PC = cpu->PC + 2;
+        //d &= 0x0F;
         return 0;
     }
     else if((insn & 0xF000) == 0x5000){
@@ -436,15 +446,17 @@ int emulate(struct cpu *cpu)
     else if((insn & 0xF000) == 0x8000){
         //CALL absolute
         cpu->SP = cpu->SP - 2;
-        store2(cpu,load2(cpu,cpu->PC+4),cpu->SP);
-        
+        uint16_t ValToStore = cpu->PC+4;
+        store2(cpu,ValToStore,cpu->SP);
+        cpu->PC = load2(cpu,cpu->PC+2);
         return 0;
     }
     else if((insn & 0xF000) == 0x9000){
         //CALL register
         cpu->SP = cpu->SP - 2;
-        store2(cpu,load2(cpu,cpu->PC+2),cpu->SP);
-        cpu->R[cpu->PC] = load2(cpu,cpu->R[a]);
+        uint16_t ValToStore = cpu->PC+2;
+        store2(cpu,ValToStore,cpu->SP);
+        cpu->PC = cpu->R[a];
         return 0;
     }
     else if((insn & 0xF000) == 0xA000 ){

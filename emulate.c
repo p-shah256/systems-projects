@@ -41,7 +41,7 @@ int emulate(struct cpu *cpu)
     if ((insn & 0xF000) == 0x1000) {
       /* SET */
         //load value from r1 into
-        cpu->R[a] = load2(cpu,cpu->PC);
+        cpu->R[a] = load2(cpu,cpu->PC+2);
         cpu->PC = cpu->PC+4;
         return 0;
         //set
@@ -104,10 +104,10 @@ int emulate(struct cpu *cpu)
             }
         else if(((insn & 0xFF00) >> 8) == 0x3C){
                 //uint16_t addrVal = load2(cpu,cpu->PC+2);
-            uint16_t rAddress = cpu->R[a];
+            uint16_t rVal = cpu->R[a];
+            rVal = rVal & 0xFF;
             uint16_t addressToLoadInto = cpu->R[b];
-            uint16_t valueAtRSrc = load2(cpu, rAddress);
-            cpu->memory[cpu->R[b]] = valueAtRSrc & 0x00FF;
+            cpu->memory[addressToLoadInto] = rVal;
             cpu->PC = cpu->PC + 2;
             }
         else{

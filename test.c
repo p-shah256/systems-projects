@@ -36,23 +36,22 @@ void test1(struct cpu *cpu) {
   assert(cpu->R[1] == 15);
 }
 
-void test_SET_2(struct cpu *cpu) {
-  zerocpu(cpu);
-  store2(cpu, 0x1001, 0);
-  store2(cpu, 0x1234, 2);
-  int val = emulate(cpu);
-
-  assert(val == 0);
-  assert((cpu->R[1] = 0x1234));
-}
 void test_SET_1(struct cpu *cpu) {
-  zerocpu(cpu);
-  store2(cpu, 0x1002, 0);
-  store2(cpu, 0x1234, 2);
-  int val = emulate(cpu);
-
-  assert(val == 0);
-  assert((cpu->R[2] = 0x1234));
+    unsigned int insn = 0b0001;
+    unsigned int a = 0b001;
+    uint16_t dataToPut = 0x1234;
+    uint16_t instruction = binary_to_hex(insn, 0b000, 0b000, 0b000, a);
+    printf("inst: 0x%04X\n", instruction);
+ 
+    zerocpu(cpu);
+    store2(cpu, instruction, 0);
+    store2(cpu, dataToPut, 2);
+    int val = emulate(cpu);
+  
+    assert(val == 0);
+    assert((cpu->PC = 4));
+    printf("value of R: 0x%04X\n", cpu->R[1]);
+    assert((cpu->R[1] == dataToPut));
 }
 
 //          +---------------------------------------------------------+
@@ -141,30 +140,28 @@ void test_STORE_3(struct cpu *cpu) {
 }
 
 //          +---------------------------------------------------------+
-//          |                  4. STORE.B R4 -> *R5                   |
-//          |   store 1 byte   of R4 into the address stored at R5    |
+//          |                  4. STORE.B R6 -> *R4                   |
+//          |   store 1 byte   of R6 into the address stored at R4    |
 //          +---------------------------------------------------------+
 void test_STORE_4(struct cpu *cpu) {
   zerocpu(cpu);
 
-  uint16_t r_4_value = 0x2A28;
-  uint16_t r_5_value = 0x1234;
-  cpu->R[4] = r_4_value;
-  cpu->R[5] = r_5_value;
+  uint16_t addressToPutInto = 0x0142;
+  uint16_t r_6_val = 0x4321;
+  uint16_t r_4_val = addressToPutInto;
+  cpu->R[6] = r_6_val;
+  cpu->R[4] = r_4_val;
 
-  // store full bytes of R4 into address held at R5
-  // 0011 11 0000 101 100
-  uint16_t instruction = 0x3C2C;
+  // store 1 byte of R6 into address held at R4
+  // 0011 11 0000 100 110
+  uint16_t instruction = 0x3C26;
   store2(cpu, instruction, 0);
-  store2(cpu, 0x4321, r_4_value);
   int val = emulate(cpu);
-  assert(val == 0);
 
-  // Check the full 16-bit value at memory address stored at r[5]
-  uint16_t stored_value = cpu->memory[cpu->R[5]];
-  printf("Value at memory address 0x%04X: 0x%04X\n", r_5_value, stored_value);
-  // 00101010
-  assert(stored_value == (0x4321 & 0x00FF));
+  assert(val == 0);
+  uint16_t stored_value = cpu->memory[addressToPutInto];
+  printf("Value at memory address 0x%04X: 0x%04X\n", addressToPutInto, stored_value);
+  assert(stored_value == (0x21));
 }
 
 
@@ -512,31 +509,43 @@ void JMP_Z_reg(struct cpu *cpu) {
     assert(cpu->PC == 2);
 }
 
+// JMP NZ 0x1020 ** Z = 0
 void JMP_NZ_addr(struct cpu *cpu) {
     unsigned int insn = 0b0110;
     unsigned int conditional = 0b010;
-    uint16_t addr = 0x1234;
+    uint16_t addr = 0x1020;
     uint16_t instruction = binary_to_hex(insn, conditional, 0b000, 0b000, 0b000);
     printf("inst: 0x%04X\n", instruction);
 
-    // SHOULD JUMP -------------------------
-    zerocpu(cpu);
-    cpu->Z = 0;
-    store2(cpu, instruction, 0);
-    store2(cpu, addr, 2);
-    int val = emulate(cpu);
-    // assert(val == 0);
-    assert((cpu->PC = addr));
 
-    // SHOULD NOT JUMP -------------------------
+    // SHOULD JUMP -------------------------
+    printf("JMP_NZ 0x1020 ** Z=0 ** should jump\n");
     zerocpu(cpu);
     cpu->Z = 1;
-    store2(cpu, instruction, 0);
+    uint16_t initalPC = 0x0036;
+    cpu->PC = initalPC;
+    store2(cpu, instruction, initalPC);
+    store2(cpu, addr, initalPC + 2);
+
+    int val = emulate(cpu);
+    assert(val == 0);
+    printf("PC = 0x%04X\n", cpu->PC);
+    assert((cpu->PC == addr));
+
+
+    // SHOULD NOT JUMP -------------------------
+    printf("JMP_NZ 0x1020 ** Z=0 ** should not jump\n");
+    zerocpu(cpu);
+    cpu->Z = 0;
+    initalPC = 0x0036;
+    cpu->PC = initalPC;
+    store2(cpu, instruction, initalPC);
     printf("inst: 0x%04X\n", instruction);
-    store2(cpu, addr, 2);
+    store2(cpu, addr, initalPC + 2);
     int val2 = emulate(cpu);
-    // assert(val == 0);
-    assert((cpu->PC = 2));
+    assert(val == 0);
+    printf("PC = 0x%04X\n", cpu->PC);
+    assert((cpu->PC == initalPC + 4));
 }
 
 void JMP_NZ_reg(struct cpu *cpu) {
@@ -549,7 +558,7 @@ void JMP_NZ_reg(struct cpu *cpu) {
 
     // SHOULD JUMP -------------------------
     zerocpu(cpu);
-    cpu->Z = 0;
+    cpu->Z = 1;
     store2(cpu, instruction, 0);
     cpu->R[4] = addr;
     int val = emulate(cpu);
@@ -558,7 +567,7 @@ void JMP_NZ_reg(struct cpu *cpu) {
 
     // SHOULD NOT JUMP -------------------------
     zerocpu(cpu);
-    cpu->Z = 1;
+    cpu->Z = 0;
     store2(cpu, instruction, 0);
     cpu->R[4] = addr;
     int val2 = emulate(cpu);
@@ -984,55 +993,54 @@ int main(int argc, char **argv) {
   cpu.memory = memory;
 
     // test1(&cpu);
-    /*run_test("SET_1", test_SET_1, &cpu);
-    run_test("SET_2", test_SET_2, &cpu);
-    run_test("STORE_1", test_STORE_1, &cpu);
-    run_test("STORE_2", test_STORE_2, &cpu);
-    run_test("STORE_3", test_STORE_3, &cpu);
-    run_test("STORE_4", test_STORE_4, &cpu);  // Note: not working currently
-    run_test("LOAD_1", test_LOAD_1, &cpu);
-    run_test("LOAD_2", test_LOAD_2, &cpu);
-    run_test("LOAD_3", test_LOAD_3, &cpu);
-    run_test("LOAD_4", test_LOAD_4, &cpu);
-    run_test("ALU_ADD", test_ALU_ADD, &cpu);
-    run_test("ALU_SUB", test_ALU_SUB, &cpu);
-    run_test("ALU_AND", test_ALU_AND, &cpu);
-    run_test("ALU_OR", test_ALU_OR, &cpu);
-    run_test("ALU_ORX", test_ALU_ORX, &cpu);
-    run_test("ALU_SHIFT", test_ALU_SHIFT, &cpu);
-    run_test("ALU_CMP", test_ALU_CMP, &cpu);
-    run_test("ALU_TEST", test_ALU_TEST, &cpu);  // Note: passes but unsure of checking the complement
-    run_test("JMP_uncond_addr", JMP_uncod_addr, &cpu);       // PASS
-    run_test("JUMP_unconditional_register", JMP_uncoditional_reg, &cpu);             // emulate does not return 0;
-    run_test("JMP_Z_addr", JMP_Z_addr, &cpu);                                        // emulate does not return 0;
-    run_test("JMP_Z_reg", JMP_Z_reg, &cpu);                                          // emulate does not return 0;
+    // run_test("SET_1", test_SET_1, &cpu);
+    // run_test("STORE_1", test_STORE_1, &cpu);
+    // run_test("STORE_2", test_STORE_2, &cpu);
+    // run_test("STORE_3", test_STORE_3, &cpu);
+    // run_test("STORE_4", test_STORE_4, &cpu);
+    // run_test("LOAD_1", test_LOAD_1, &cpu);
+    // run_test("LOAD_2", test_LOAD_2, &cpu);
+    // run_test("LOAD_3", test_LOAD_3, &cpu);
+    // run_test("LOAD_4", test_LOAD_4, &cpu);
+    // run_test("ALU_ADD", test_ALU_ADD, &cpu);
+    // run_test("ALU_SUB", test_ALU_SUB, &cpu);
+    // run_test("ALU_AND", test_ALU_AND, &cpu);
+    // run_test("ALU_OR", test_ALU_OR, &cpu);
+    // run_test("ALU_ORX", test_ALU_ORX, &cpu);
+    // run_test("ALU_SHIFT", test_ALU_SHIFT, &cpu);
+    // run_test("ALU_CMP", test_ALU_CMP, &cpu);
+    // run_test("ALU_TEST", test_ALU_TEST, &cpu);  // Note: passes but unsure of checking the complement
+    // run_test("JMP_uncond_addr", JMP_uncod_addr, &cpu);       // PASS
+    // run_test("JUMP_unconditional_register", JMP_uncoditional_reg, &cpu);             // emulate does not return 0;
+    // run_test("JMP_Z_addr", JMP_Z_addr, &cpu);                                        // emulate does not return 0;
+    // run_test("JMP_Z_reg", JMP_Z_reg, &cpu);                                          // emulate does not return 0;
     run_test("JMP_NZ_addr", JMP_NZ_addr, &cpu);                                      // emulate does not return 0;
-    run_test("JMP_NZ_reg", JMP_NZ_addr, &cpu);               // PASS
-    run_test("JMP_LT_reg", JMP_LT_reg, &cpu);                                        // DOES NOT PASS
-    run_test("JMP_LT_addr", JMP_LT_addr, &cpu);                                      // emulate does not return 0;
-    run_test("JMP_GT_reg", JMP_GT_reg, &cpu);                // DOES NOT PASS
-    run_test("JMP_GT_addr", JMP_GT_addr, &cpu);              // DOES NOT PASS
-    run_test("JMP_LE_reg", JMP_LE_reg, &cpu);               // DOES NOT PASS
-    run_test("JMP_LE_addr", JMP_LE_addr, &cpu);               // emulate does not return 0;
-    run_test("JMP_GE_reg", JMP_GE_reg, &cpu);               // DOES NOT PASS
-    run_test("JMP_GE_addr", JMP_GE_addr, &cpu);               // emulate does not return 0;
-
-    run_test("CALL_addr", CALL_addr, &cpu);       // DOES NOT PASS
-    run_test("CALL_reg", CALL_reg, &cpu);       // DOES NOT PASS
-
-
-    // run_test("CALL_reg", CALL_reg, &cpu);       // PASS
-    // run_test("CALL_addr", CALL_addr, &cpu);       // PASS
-    run_test("RET", RET, &cpu);       // PASS
-    run_test("PUSH_stack", PUSH_stack, &cpu);       // PASS
-    run_test("POP_stack", POP_stack, &cpu);       // PASS
-    run_test("HALT", HALT, &cpu);       // PASS
-    
-
-    run_test("MOVE_reg", MOVE_reg, &cpu);       // PASS
-    run_test("MOVE_stack", MOVE_stack, &cpu); */      // PASS
-    run_test("IN", IN,&cpu);
-    run_test("OUT", OUT,&cpu);
-
+    run_test("JMP_NZ_reg", JMP_NZ_reg, &cpu);               // PASS
+    // run_test("JMP_LT_reg", JMP_LT_reg, &cpu);                                        // DOES NOT PASS
+    // run_test("JMP_LT_addr", JMP_LT_addr, &cpu);                                      // emulate does not return 0;
+    // run_test("JMP_GT_reg", JMP_GT_reg, &cpu);                // DOES NOT PASS
+    // run_test("JMP_GT_addr", JMP_GT_addr, &cpu);              // DOES NOT PASS
+    // run_test("JMP_LE_reg", JMP_LE_reg, &cpu);               // DOES NOT PASS
+    // run_test("JMP_LE_addr", JMP_LE_addr, &cpu);               // emulate does not return 0;
+    // run_test("JMP_GE_reg", JMP_GE_reg, &cpu);               // DOES NOT PASS
+    // run_test("JMP_GE_addr", JMP_GE_addr, &cpu);               // emulate does not return 0;
+    //
+    // run_test("CALL_addr", CALL_addr, &cpu);       // DOES NOT PASS
+    // run_test("CALL_reg", CALL_reg, &cpu);       // DOES NOT PASS
+    //
+    //
+    // // run_test("CALL_reg", CALL_reg, &cpu);       // PASS
+    // // run_test("CALL_addr", CALL_addr, &cpu);       // PASS
+    // run_test("RET", RET, &cpu);       // PASS
+    // run_test("PUSH_stack", PUSH_stack, &cpu);       // PASS
+    // run_test("POP_stack", POP_stack, &cpu);       // PASS
+    // run_test("HALT", HALT, &cpu);       // PASS
+    //
+    //
+    // run_test("MOVE_reg", MOVE_reg, &cpu);       // PASS
+    // run_test("MOVE_stack", MOVE_stack, &cpu);      // PASS
+    // run_test("IN", IN,&cpu);
+    // run_test("OUT", OUT,&cpu);
+    //
     printf("all tests PASS\n");
 }

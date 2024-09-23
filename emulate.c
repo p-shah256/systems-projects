@@ -310,7 +310,7 @@ int emulate(struct cpu *cpu)
                 break;
             case 0x02:
                 //JMP_NZ
-                if(cpu->Z != 0){
+                if(cpu->Z == 0){
                     cpu->PC = load2(cpu,cpu->PC+2);
 
                 }
@@ -387,7 +387,7 @@ int emulate(struct cpu *cpu)
                 break;
             case 0x02:
                 //JMP_NZ
-                if(cpu->Z != 0){
+                if(cpu->Z == 0){
                     cpu->PC = cpu->R[a];
 
                 }

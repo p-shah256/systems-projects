@@ -521,7 +521,7 @@ void JMP_NZ_addr(struct cpu *cpu) {
     // SHOULD JUMP -------------------------
     printf("JMP_NZ 0x1020 ** Z=0 ** should jump\n");
     zerocpu(cpu);
-    cpu->Z = 1;
+    cpu->Z = 0;
     uint16_t initalPC = 0x0036;
     cpu->PC = initalPC;
     store2(cpu, instruction, initalPC);
@@ -534,9 +534,9 @@ void JMP_NZ_addr(struct cpu *cpu) {
 
 
     // SHOULD NOT JUMP -------------------------
-    printf("JMP_NZ 0x1020 ** Z=0 ** should not jump\n");
+    printf("JMP_NZ 0x1020 ** Z=1 ** should not jump\n");
     zerocpu(cpu);
-    cpu->Z = 0;
+    cpu->Z = 1;
     initalPC = 0x0036;
     cpu->PC = initalPC;
     store2(cpu, instruction, initalPC);
@@ -558,7 +558,7 @@ void JMP_NZ_reg(struct cpu *cpu) {
 
     // SHOULD JUMP -------------------------
     zerocpu(cpu);
-    cpu->Z = 1;
+    cpu->Z = 0;
     store2(cpu, instruction, 0);
     cpu->R[4] = addr;
     int val = emulate(cpu);
@@ -567,7 +567,7 @@ void JMP_NZ_reg(struct cpu *cpu) {
 
     // SHOULD NOT JUMP -------------------------
     zerocpu(cpu);
-    cpu->Z = 0;
+    cpu->Z = 1;
     store2(cpu, instruction, 0);
     cpu->R[4] = addr;
     int val2 = emulate(cpu);

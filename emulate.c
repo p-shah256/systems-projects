@@ -27,7 +27,7 @@ uint16_t load2(struct cpu *cpu, uint16_t addr) {
 
 
 /* emulate(struct cpu*) - emulate a single instruction
- *     - returns 1 for halt, 0 for no halt 
+ *     - returns 1 for halt, 0 for no halt
  */
 
 int emulate(struct cpu *cpu)
@@ -150,8 +150,8 @@ int emulate(struct cpu *cpu)
             case 0x0200:
                 //SUB
                 //uint16_t
-                store2(cpu,load2(cpu,cpu->R[a]) - load2(cpu,cpu->R[b]),cpu->R[c]);
-                res = load2(cpu,cpu->R[c]);
+                res = cpu->R[a] - cpu->R[b];
+                cpu->R[c] = res;
                 if(res == 0){
                     cpu->Z = 1;
                 }
@@ -167,8 +167,8 @@ int emulate(struct cpu *cpu)
                 break;
             case 0x0400:
                 //AND
-                store2(cpu,load2(cpu,cpu->R[a]) & load2(cpu,cpu->R[b]),cpu->R[c]);
-                res = load2(cpu,cpu->R[c]);
+                res = cpu->R[a] & cpu->R[b];
+                cpu->R[c] = res;
                 if(res == 0){
                     cpu->Z = 1;
                 }
@@ -184,8 +184,8 @@ int emulate(struct cpu *cpu)
                 break;
             case 0x0600:
                 //OR
-                store2(cpu,load2(cpu,cpu->R[a]) | load2(cpu,cpu->R[b]),cpu->R[c]);
-                res = load2(cpu,cpu->R[c]);
+                res = cpu->R[a] | cpu->R[b];
+                cpu->R[c] = res;
                 if(res == 0){
                     cpu->Z = 1;
                 }
@@ -201,8 +201,8 @@ int emulate(struct cpu *cpu)
                 break;
             case 0x0800:
                 //XOR
-                store2(cpu,load2(cpu,cpu->R[a]) ^ load2(cpu,cpu->R[b]),cpu->R[c]);
-                res = load2(cpu,cpu->R[c]);
+                res = cpu->R[a] ^ cpu->R[b];
+                cpu->R[c] = res;
                 if(res == 0){
                     cpu->Z = 1;
                 }
@@ -218,10 +218,10 @@ int emulate(struct cpu *cpu)
                 break;
             case 0x0A00:
                 //SHIFT R
-                shiftA =load2(cpu,cpu->R[a]);
-                shiftB =load2(cpu,cpu->R[b]);
-                store2(cpu, (shiftA >> shiftB) ,cpu->R[c]);
-                res = load2(cpu,cpu->R[c]);
+                shiftA =cpu->R[a];
+                shiftB =cpu->R[b];
+                res = shiftA >> shiftB;
+                cpu->R[c] = res;
                 if(res == 0){
                     cpu->Z = 1;
                 }
@@ -237,7 +237,7 @@ int emulate(struct cpu *cpu)
                 break;
             case 0x0C00:
                 //CMP
-                res = load2(cpu,cpu->R[a]) - load2(cpu,cpu->R[b]);
+                res = cpu->R[a] - cpu->R[b];
                 if(res == 0){
                     cpu->Z = 1;
                 }
@@ -253,7 +253,7 @@ int emulate(struct cpu *cpu)
                 break;
             case 0x0E00:
                 //TEST
-                res = load2(cpu,cpu->R[a]);
+                res = cpu->R[a];
                 int is_negative = (res & 0x8000) != 0;
                 if(res == 0){
                     cpu->Z = 1;
@@ -269,8 +269,9 @@ int emulate(struct cpu *cpu)
                 }
                 break;
             default:
-                store2(cpu,load2(cpu,cpu->R[b]) + load2(cpu,cpu->R[a]),cpu->R[c]);
-                res = load2(cpu,cpu->R[c]);
+                //store2(cpu,load2(cpu,cpu->R[b]) + load2(cpu,cpu->R[a]),cpu->R[c]);
+                res = cpu->R[a] + cpu->R[b];
+                cpu->R[c] = res;
                 if(res == 0){
                     cpu->Z = 1;
                 }

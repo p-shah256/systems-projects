@@ -300,16 +300,16 @@ void test_ALU_SUB(struct cpu *cpu){
     uint16_t instruction = 0x5311;
     uint16_t aVal = 0x485;
     uint16_t bVal = 0x123;
-    cpu->R[1] = 0x1234;
-    cpu->R[2] = 0x4321;
-    cpu->R[4] = 0x2A28;
-    store2(cpu,aVal,cpu->R[1]);
-    store2(cpu,bVal,cpu->R[2]);
+    cpu->R[1] = aVal;
+    cpu->R[2] = bVal;
+    //cpu->R[4] = 0x2A28;
+    //store2(cpu,aVal,cpu->R[1]);
+    //store2(cpu,bVal,cpu->R[2]);
     //add o = 000 a-> 1 b->2 c-> 4
     //adding values of addresses of R[a] + R[b] then storing R[c]
     store2(cpu,instruction,0);
     int val = emulate(cpu);
-    uint16_t result = load2(cpu,cpu->R[4]);
+    uint16_t result = cpu->R[4];
     assert(val == 0);
     assert(cpu->N == 0);
     assert(cpu->Z == 0);
@@ -342,16 +342,16 @@ void test_ALU_OR(struct cpu *cpu){
     uint16_t instruction = 0x5711;
     uint16_t aVal = 0x485;
     uint16_t bVal = 0x123;
-    cpu->R[1] = 0x1234;
-    cpu->R[2] = 0x4321;
-    cpu->R[4] = 0x2A28;
-    store2(cpu,aVal,cpu->R[1]);
-    store2(cpu,bVal,cpu->R[2]);
+    cpu->R[1] = aVal;
+    cpu->R[2] = bVal;
+    //cpu->R[4] = 0x2A28;
+    //store2(cpu,aVal,cpu->R[1]);
+    //store2(cpu,bVal,cpu->R[2]);
     //add o = 000 a-> 1 b->2 c-> 4
     //adding values of addresses of R[a] + R[b] then storing R[c]
     store2(cpu,instruction,0);
     int val = emulate(cpu);
-    uint16_t result = load2(cpu,cpu->R[4]);
+    uint16_t result = cpu->R[4];
     assert(val == 0);
     assert(cpu->N == 0);
     assert(cpu->Z == 0);
@@ -363,16 +363,16 @@ void test_ALU_ORX(struct cpu *cpu){
     uint16_t instruction = 0x5911;
     uint16_t aVal = 0x485;
     uint16_t bVal = 0x123;
-    cpu->R[1] = 0x1234;
-    cpu->R[2] = 0x4321;
-    cpu->R[4] = 0x2A28;
-    store2(cpu,aVal,cpu->R[1]);
-    store2(cpu,bVal,cpu->R[2]);
+    cpu->R[1] = aVal;
+    cpu->R[2] = bVal;
+    //cpu->R[4] = 0x2A28;
+    //store2(cpu,aVal,cpu->R[1]);
+    //store2(cpu,bVal,cpu->R[2]);
     //add o = 000 a-> 1 b->2 c-> 4
     //adding values of addresses of R[a] + R[b] then storing R[c]
     store2(cpu,instruction,0);
     int val = emulate(cpu);
-    uint16_t result = load2(cpu,cpu->R[4]);
+    uint16_t result = cpu->R[4];
     assert(val == 0);
     assert(cpu->N == 0);
     assert(cpu->Z == 0);
@@ -384,16 +384,16 @@ void test_ALU_SHIFT(struct cpu *cpu){
     uint16_t instruction = 0x5B11;
     uint16_t aVal = 0x485;
     uint16_t bVal = 0x5;
-    cpu->R[1] = 0x1234;
-    cpu->R[2] = 0x4321;
-    cpu->R[4] = 0x2A28;
-    store2(cpu,aVal,cpu->R[1]);
-    store2(cpu,bVal,cpu->R[2]);
+    cpu->R[1] = aVal;
+    cpu->R[2] = bVal;
+    //cpu->R[4] = 0x2A28;
+    //store2(cpu,aVal,cpu->R[1]);
+    //store2(cpu,bVal,cpu->R[2]);
     //add o = 000 a-> 1 b->2 c-> 4
     //adding values of addresses of R[a] + R[b] then storing R[c]
     store2(cpu,instruction,0);
     int val = emulate(cpu);
-    uint16_t result = load2(cpu,cpu->R[4]);
+    uint16_t result = cpu->R[4];
     assert(val == 0);
     assert(cpu->N == 0);
     assert(cpu->Z == 0);
@@ -1023,11 +1023,11 @@ int main(int argc, char **argv) {
     // run_test("LOAD_4", test_LOAD_4, &cpu);
      run_test("ALU_ADD", test_ALU_ADD, &cpu);
     run_test("ALU_ADD2",test_ALU_ADD2,&cpu);
-    // run_test("ALU_SUB", test_ALU_SUB, &cpu);
+    run_test("ALU_SUB", test_ALU_SUB, &cpu);
      run_test("ALU_AND", test_ALU_AND, &cpu);
-    // run_test("ALU_OR", test_ALU_OR, &cpu);
-    // run_test("ALU_ORX", test_ALU_ORX, &cpu);
-    // run_test("ALU_SHIFT", test_ALU_SHIFT, &cpu);
+    run_test("ALU_OR", test_ALU_OR, &cpu);
+    run_test("ALU_ORX", test_ALU_ORX, &cpu);
+    run_test("ALU_SHIFT", test_ALU_SHIFT, &cpu);
     run_test("ALU_CMP", test_ALU_CMP, &cpu);
     run_test("ALU_TEST", test_ALU_TEST, &cpu);  // Note: passes but unsure of checking the complement
     // run_test("JMP_uncond_addr", JMP_uncod_addr, &cpu);       // PASS

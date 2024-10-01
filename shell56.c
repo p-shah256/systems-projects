@@ -64,6 +64,7 @@ int main(int argc, char **argv)
              */
             signal(SIGINT, SIG_IGN);  /* ignore SIGINT=^C */
             printf("$ ");
+            signal(SIGINT, SIG_IGN);  /* ignore SIGINT=^C */
             fflush(stdout);
         }
 
@@ -84,10 +85,16 @@ int main(int argc, char **argv)
             }
         }*/
         printf("line:");
-        for (int i = 0; i < n_tokens; i++){
+        for (int i = 0; i < n_tokens; i++) {
             printf(" '%s'", tokens[i]);
-            if(strcmp(tokens[i],"cd") == 0){
-                runCD(tokens);
+            if (strcmp(tokens[i],"pwd") == 0) {
+                printf("\n pwd called");
+                char cwd[1024];
+                if (getcwd(cwd, sizeof(cwd)) != NULL) {
+                    printf("\nCurrent working directory: %s\n", cwd);
+                } else {
+                    perror("getcwd() error");
+                }
             }
         }
 

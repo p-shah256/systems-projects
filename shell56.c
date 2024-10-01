@@ -22,6 +22,12 @@
 #include <signal.h>
 #include <fcntl.h>
 
+void runCD(int argc, char **argv){
+    for(int i=0;i<argv.size;i++){
+
+    }
+    chdir(getenv("`"));
+}
 
 int main(int argc, char **argv)
 {
@@ -56,6 +62,7 @@ int main(int argc, char **argv)
             /* print prompt. flush stdout, since normally the tty driver doesn't
              * do this until it sees '\n'
              */
+            signal(SIGINT, SIG_IGN);  /* ignore SIGINT=^C */
             printf("$ ");
             fflush(stdout);
         }
@@ -71,12 +78,19 @@ int main(int argc, char **argv)
 
         /* replace the code below with your shell:
          */
+        /*for(int i = 0;i < n_tokens; i++){
+            if(tokens[i] == "cd"){
+
+            }
+        }*/
         printf("line:");
-        for (int i = 0; i < n_tokens; i++)
+        for (int i = 0; i < n_tokens; i++){
             printf(" '%s'", tokens[i]);
+            if(strcmp(tokens[i],"cd") == 0){
+                runCD(tokens);
+            }
+        }
+
         printf("\n");
     }
-
-    if (interactive)            /* make things pretty */
-        printf("\n");           /* try deleting this and then quit with ^D */
 }

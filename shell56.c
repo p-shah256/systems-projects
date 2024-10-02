@@ -33,7 +33,6 @@ int main(int argc, char **argv)
 {
     bool interactive = isatty(STDIN_FILENO); /* see: man 3 isatty */
     FILE *fp = stdin;
-
     if (argc == 2) {
         interactive = false;
         fp = fopen(argv[1], "r");

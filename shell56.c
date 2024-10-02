@@ -41,9 +41,14 @@ int runpwd(){
 }
 
 int runcd(int argc, char **argv){
+    int status;
     if (argc == 1) {
         printf("\n cd called without any args");
-        chdir(getenv("~"));
+        status = chdir(getenv("~"));
+        if(status != 0){
+            fprintf("cd: %s\n", strerror(errno));
+            return 1;
+        }
     }
     else if(argc > 2){
         fprintf(stderr,"cd: wrong number of arguments\n");
@@ -51,7 +56,11 @@ int runcd(int argc, char **argv){
     }
     else {
         printf("\n cd called with an args");
-        chdir(argv[1]);
+        status = chdir(argv[1]);
+        if(status != 0){
+            fprintf("cd: %s\n", strerror(errno));
+            return 1;
+        }
     }
     return 0;
 }

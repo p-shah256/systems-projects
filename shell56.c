@@ -28,6 +28,19 @@
     }
     chdir(getenv("`"));
 }*/
+int runexit(int argc, char **argv){
+    if(argc == 0){
+        exit(0);
+    }
+    else if(argc == 1){
+        exit(atoi(argv[0]));
+    }
+    else{
+        perror("exit error: too many arguements");
+    }
+    return 0;
+}
+
 int runpwd(){
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
@@ -46,7 +59,7 @@ int runcd(int argc, char **argv){
         printf("\n cd called without any args");
         status = chdir(getenv("~"));
         if(status != 0){
-            fprintf("cd: %s\n", strerror(errno));
+            fprintf("cd: %s\n", strerror(status));
             return 1;
         }
     }
@@ -58,7 +71,7 @@ int runcd(int argc, char **argv){
         printf("\n cd called with an args");
         status = chdir(argv[1]);
         if(status != 0){
-            fprintf("cd: %s\n", strerror(errno));
+            fprintf("cd: %s\n", strerror(status));
             return 1;
         }
     }
@@ -139,7 +152,16 @@ int main(int argc, char **argv)
                 runcd(j,argv);
             }
             else if(strcmp(tokens[i], "exit") == 0){
-                
+                printf("\n exit called, token number: %d",i);
+                char *argv[1];
+                int j = 0;
+                int y = i+1;
+                while(tokens[y] != NULL){
+                    argv[j] = tokens[y];
+                    y++;
+                    j++;
+                }
+                runexit(j,argv);
             }
         }
 

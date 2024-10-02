@@ -22,13 +22,39 @@
 #include <signal.h>
 #include <fcntl.h>
 
-void runCD(int argc, char **argv){
+/*void runCD(int argc, char **argv){
     for(int i=0;i<argv.size;i++){
 
     }
     chdir(getenv("`"));
+}*/
+int runpwd(){
+    char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("\nCurrent working directory: %s\n", cwd);
+    } 
+    else {
+        perror("getcwd() error");
+        return 1;
+        }
+    return 0;
 }
 
+int runcd(int argc, char **argv){
+    if (argc == 1) {
+        printf("\n cd called without any args");
+        chdir(getenv("~"));
+    }
+    else if(argc > 2){
+        fprintf(stderr,"cd: wrong number of arguments\n");
+        return 1;
+    }
+    else {
+        printf("\n cd called with an args");
+        chdir(argv[1]);
+    }
+    return 0;
+}
 int main(int argc, char **argv)
 {
     bool interactive = isatty(STDIN_FILENO); /* see: man 3 isatty */
@@ -89,25 +115,26 @@ int main(int argc, char **argv)
             printf(" '%s'", tokens[i]);
             if (strcmp(tokens[i],"pwd") == 0) {
                 printf("\n pwd called");
-                char cwd[1024];
-                if (getcwd(cwd, sizeof(cwd)) != NULL) {
-                    printf("\nCurrent working directory: %s\n", cwd);
-                } else {
-                    perror("getcwd() error");
-                }
+                runpwd();
             }
-
             else if (strcmp(tokens[i], "cd") == 0) {
+                char *argv[2];
+                int j = 0;
+                int y = i;
+                while(tokens[y] != NULL){
+                    argv[j] = tokens[y];
+                    y++;
+                    j++;
+                }
                 printf("\n cd called, token number: %d", i);
-                if (i + 1 >= n_tokens) {
-                    printf("\n cd called without any args");
-                }
-                else {
-                    chdir(tokens[i+1]);
-                }
+                runcd(j,argv);
+            }
+            else if(strcmp(tokens[i], "exit") == 0){
+                
             }
         }
 
         printf("\n");
     }
 }
+

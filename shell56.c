@@ -83,6 +83,7 @@ int main(int argc, char **argv)
 
             }
         }*/
+        printf("%d", n_tokens);
         printf("line:");
         for (int i = 0; i < n_tokens; i++) {
             printf(" '%s'", tokens[i]);
@@ -93,6 +94,16 @@ int main(int argc, char **argv)
                     printf("\nCurrent working directory: %s\n", cwd);
                 } else {
                     perror("getcwd() error");
+                }
+            }
+
+            else if (strcmp(tokens[i], "cd") == 0) {
+                printf("\n cd called, token number: %d", i);
+                if (i + 1 >= n_tokens) {
+                    printf("\n cd called without any args");
+                }
+                else {
+                    chdir(tokens[i+1]);
                 }
             }
         }

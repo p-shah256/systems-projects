@@ -45,7 +45,7 @@ int runpwd(){
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
         printf("\nCurrent working directory: %s\n", cwd);
-    } 
+    }
     else {
         perror("getcwd() error");
         return 1;
@@ -77,6 +77,7 @@ int runcd(int argc, char **argv){
     }
     return 0;
 }
+
 int main(int argc, char **argv)
 {
     bool interactive = isatty(STDIN_FILENO); /* see: man 3 isatty */
@@ -93,11 +94,11 @@ int main(int argc, char **argv)
         fprintf(stderr, "%s: too many arguments\n", argv[0]);
         exit(EXIT_FAILURE);
     }
-    
+
     char line[1024], linebuf[1024];
     const int max_tokens = 32;
     char *tokens[max_tokens];
-    
+ 
     /* loop:
      *   if interactive: print prompt
      *   read line, break if end of file
@@ -124,14 +125,7 @@ int main(int argc, char **argv)
          */
         int n_tokens = parse(line, max_tokens, tokens, linebuf, sizeof(linebuf));
 
-        /* replace the code below with your shell:
-         */
-        /*for(int i = 0;i < n_tokens; i++){
-            if(tokens[i] == "cd"){
-
-            }
-        }*/
-        printf("%d", n_tokens);
+        // printf("Number of tokens: %d \n", n_tokens);
         printf("line:");
         for (int i = 0; i < n_tokens; i++) {
             printf(" '%s'", tokens[i]);
@@ -139,6 +133,7 @@ int main(int argc, char **argv)
                 printf("\n pwd called");
                 runpwd();
             }
+
             else if (strcmp(tokens[i], "cd") == 0) {
                 char *argv[2];
                 int j = 0;
@@ -151,6 +146,7 @@ int main(int argc, char **argv)
                 printf("\n cd called, token number: %d", i);
                 runcd(j,argv);
             }
+
             else if(strcmp(tokens[i], "exit") == 0){
                 printf("\n exit called, token number: %d",i);
                 char *argv[1];
@@ -163,9 +159,41 @@ int main(int argc, char **argv)
                 }
                 runexit(j,argv);
             }
-        }
 
+            // part 3: external commands with NO I/o redirections
+            else if (strcmp(tokens[i], "ls") == 0){
+                    // printf("\n external called \n");
+                    // printf("tokens[i]: '%s', tokens[i+1]: '%s' \n", tokens[i], tokens[i+1]);
+                // create a varible to store pid
+                pid_t pid;
+                pid = fork();
+                if (pid < 0) {
+                    perror("Fork Failed");
+                }
+
+                else if (pid == 0) {
+                        // printf("from child \n");
+                    // This block is executed by the child process (pid == 0)
+                        // printf("Child process: PID = %d, Parent PID = %d\n", getpid(), getppid());
+                    // Optionally replace the child process with a new program (exec...)
+                    execvp(tokens[i], tokens);
+                    exit(0);
+                }
+
+                else {
+                        // printf("from parent \n");
+                    // This block is executed by the parent process (pid > 0)
+                        // printf("Parent process: PID = %d, Child PID = %d\n", getpid(), pid);
+
+                    // Wait for the child process to finish
+                    waitpid(pid, NULL, 0);
+                        // printf("Child process finished\n");
+                }
+                i += 1;
+            }
+        }
         printf("\n");
     }
 }
+
 

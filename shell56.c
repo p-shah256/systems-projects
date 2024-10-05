@@ -44,7 +44,7 @@ int runexit(int argc, char **argv){
 int runpwd(){
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("\nCurrent working directory: %s\n", cwd);
+        printf("Current working directory: %s\n", cwd);
     }
     else {
         perror("getcwd() error");
@@ -77,6 +77,42 @@ int runcd(int argc, char **argv){
     }
     return 0;
 }
+
+int runExternal(char** tokens, int *i, int *n_tokens) {
+        // printf("\n external called \n");
+        // printf("tokens[i]: '%s', tokens[i+1]: '%s' \n", tokens[i], tokens[i+1]);
+    // create a varible to store pid
+    pid_t pid;
+    pid = fork();
+    if (pid < 0) {
+        perror("Fork Failed");
+    }
+
+    else if (pid == 0) {
+            // printf("from child \n");
+        // This block is executed by the child process (pid == 0)
+            // printf("Child process: PID = %d, Parent PID = %d\n", getpid(), getppid());
+        // Optionally replace the child process with a new program (exec...)
+        int result = execvp(tokens[*i], tokens);
+        if (result != 0) {
+            printf("  ERROR: command '%s' not found\n", tokens[*i]);
+        }
+        exit(0);
+    }
+
+    else {
+            // printf("from parent \n");
+        // This block is executed by the parent process (pid > 0)
+            // printf("Parent process: PID = %d, Child PID = %d\n", getpid(), pid);
+
+        // Wait for the child process to finish
+        waitpid(pid, NULL, 0);
+            // printf("Child process finished\n");
+    }
+    *i = *n_tokens;
+    return 0;
+}
+
 
 int main(int argc, char **argv)
 {
@@ -125,12 +161,14 @@ int main(int argc, char **argv)
          */
         int n_tokens = parse(line, max_tokens, tokens, linebuf, sizeof(linebuf));
 
+        // DEBUG:
         // printf("Number of tokens: %d \n", n_tokens);
-        printf("line:");
+        // printf("line:");
         for (int i = 0; i < n_tokens; i++) {
-            printf(" '%s'", tokens[i]);
+            // DEBUG:
+            // printf(" '%s'", tokens[i]);
             if (strcmp(tokens[i],"pwd") == 0) {
-                printf("\n pwd called");
+                // printf("\n pwd called");
                 runpwd();
             }
 
@@ -161,35 +199,12 @@ int main(int argc, char **argv)
             }
 
             // part 3: external commands with NO I/o redirections
-            else if (strcmp(tokens[i], "ls") == 0){
-                    // printf("\n external called \n");
-                    // printf("tokens[i]: '%s', tokens[i+1]: '%s' \n", tokens[i], tokens[i+1]);
-                // create a varible to store pid
-                pid_t pid;
-                pid = fork();
-                if (pid < 0) {
-                    perror("Fork Failed");
-                }
-
-                else if (pid == 0) {
-                        // printf("from child \n");
-                    // This block is executed by the child process (pid == 0)
-                        // printf("Child process: PID = %d, Parent PID = %d\n", getpid(), getppid());
-                    // Optionally replace the child process with a new program (exec...)
-                    execvp(tokens[i], tokens);
-                    exit(0);
-                }
-
-                else {
-                        // printf("from parent \n");
-                    // This block is executed by the parent process (pid > 0)
-                        // printf("Parent process: PID = %d, Child PID = %d\n", getpid(), pid);
-
-                    // Wait for the child process to finish
-                    waitpid(pid, NULL, 0);
-                        // printf("Child process finished\n");
-                }
-                i += 1;
+            else {
+                // NOTE:    considers everything after external as a part of that command
+                //          updates i = n_tokens
+                // 
+                // WHY: otherwise it will treat each word as an external command
+                runExternal(tokens, &i, &n_tokens);
             }
         }
         printf("\n");

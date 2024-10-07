@@ -5,7 +5,7 @@
  * Peter Desnoyers, Northeastern CS5600 Fall 2024
  */
 
-/* <> means don't check the local directory */ 
+/* <> means don't check the local directory */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -29,6 +29,7 @@
     chdir(getenv("`"));
 }*/
 int runexit(int argc, char **argv){
+    printf("\n argv: %s",*argv[0]);
     if(argc == 0){
         exit(0);
     }
@@ -57,11 +58,12 @@ int runcd(int argc, char **argv){
     int status;
     if (argc == 1) {
         printf("\n cd called without any args");
-        status = chdir(getenv("~"));
-        if(status != 0){
+        chdir(getenv("~")); //error when returning a status from chdir, recieve access error on abort
+        //otherwise without status, seems to work fine
+        /*if(status != 0){
             fprintf("cd: %s\n", strerror(status));
             return 1;
-        }
+        }*/
     }
     else if(argc > 2){
         fprintf(stderr,"cd: wrong number of arguments\n");
@@ -82,6 +84,8 @@ int runExternal(char** tokens, int *i, int *n_tokens) {
         // printf("\n external called \n");
         // printf("tokens[i]: '%s', tokens[i+1]: '%s' \n", tokens[i], tokens[i+1]);
     // create a varible to store pid
+    char qbuf[16]; //status code for waiting for child process to end
+    int status;
     pid_t pid;
     pid = fork();
     if (pid < 0) {
@@ -106,9 +110,27 @@ int runExternal(char** tokens, int *i, int *n_tokens) {
             // printf("Parent process: PID = %d, Child PID = %d\n", getpid(), pid);
 
         // Wait for the child process to finish
-        waitpid(pid, NULL, 0);
+        waitpid(pid, &status, 0);
+        if(WIFEXITED(status)){
+            sprintf(qbuf,"%d",WEXITSTATUS(status));
+            printf("\n%s",qbuf);
+            //printf("\n%s",tokens[1]);
+            //this loop is causing break in read access
+            //goal is to wait for child process to exit and read the status code
+            //into char array qbuf, and then loop
+            //through tokens to string compare to $? and attach the pointer to qbuf at 
+            //that location in tokens array
+            /*for(int i=0;i<n_tokens;i++){
+                printf("%s",tokens[i]);
+                if(strcmp(tokens[i],"$?") == 0){
+                    tokens[i] = &qbuf;
+                }
+            }*/
+        }
+
             // printf("Child process finished\n");
     }
+
     *i = *n_tokens;
     return 0;
 }
@@ -195,14 +217,18 @@ int main(int argc, char **argv)
                     y++;
                     j++;
                 }
-                runexit(j,argv);
-            }
+                printf("\nexit called with status %s",argv[0]);
+                exit(atoi(argv[0]));
+                //runexit(j,argv);
 
+            }
+            //instead of running just the exit command, checking if can run exit externally
+            // so we can capture exit status and attach to $? variable
             // part 3: external commands with NO I/o redirections
             else {
                 // NOTE:    considers everything after external as a part of that command
                 //          updates i = n_tokens
-                // 
+                //
                 // WHY: otherwise it will treat each word as an external command
                 runExternal(tokens, &i, &n_tokens);
             }

@@ -29,7 +29,7 @@
     chdir(getenv("`"));
 }*/
 int runexit(int argc, char **argv){
-    printf("\n argv: %s",*argv[0]);
+    printf("\n argv: %s",argv[0]);
     if(argc == 0){
         exit(0);
     }
@@ -80,11 +80,11 @@ int runcd(int argc, char **argv){
     return 0;
 }
 
-int runExternal(char** tokens, int *i, int *n_tokens) {
+int runExternal(char** tokens, int *i, int *n_tokens, char *qbuf) {
         // printf("\n external called \n");
         // printf("tokens[i]: '%s', tokens[i+1]: '%s' \n", tokens[i], tokens[i+1]);
     // create a varible to store pid
-    char qbuf[16]; //status code for waiting for child process to end
+     //status code for waiting for child process to end
     int status;
     pid_t pid;
     pid = fork();
@@ -110,15 +110,16 @@ int runExternal(char** tokens, int *i, int *n_tokens) {
             // printf("Parent process: PID = %d, Child PID = %d\n", getpid(), pid);
 
         // Wait for the child process to finish
+        //works
         waitpid(pid, &status, 0);
         if(WIFEXITED(status)){
             sprintf(qbuf,"%d",WEXITSTATUS(status));
-            printf("\n%s",qbuf);
+            //printf("\nParent grabbed child exit code: %c",qbuf[0]);
             //printf("\n%s",tokens[1]);
             //this loop is causing break in read access
             //goal is to wait for child process to exit and read the status code
             //into char array qbuf, and then loop
-            //through tokens to string compare to $? and attach the pointer to qbuf at 
+            //through tokens to string compare to $? and attach the pointer to qbuf at
             //that location in tokens array
             /*for(int i=0;i<n_tokens;i++){
                 printf("%s",tokens[i]);
@@ -156,7 +157,7 @@ int main(int argc, char **argv)
     char line[1024], linebuf[1024];
     const int max_tokens = 32;
     char *tokens[max_tokens];
- 
+    char qbuf[16];
     /* loop:
      *   if interactive: print prompt
      *   read line, break if end of file
@@ -182,7 +183,13 @@ int main(int argc, char **argv)
         /* read a line, tokenize it, and print it out
          */
         int n_tokens = parse(line, max_tokens, tokens, linebuf, sizeof(linebuf));
-
+        if(qbuf[0] != "\0"){
+            for(int i = 0; i < n_tokens; i++){
+                if(strcmp(tokens[i],"$!") == 0){
+                    tokens[i] = qbuf;
+                }
+            }
+        }
         // DEBUG:
         // printf("Number of tokens: %d \n", n_tokens);
         // printf("line:");
@@ -218,8 +225,8 @@ int main(int argc, char **argv)
                     j++;
                 }
                 printf("\nexit called with status %s",argv[0]);
-                exit(atoi(argv[0]));
-                //runexit(j,argv);
+                //exit(atoi(argv[0]));
+                runexit(j,argv);
 
             }
             //instead of running just the exit command, checking if can run exit externally
@@ -230,7 +237,7 @@ int main(int argc, char **argv)
                 //          updates i = n_tokens
                 //
                 // WHY: otherwise it will treat each word as an external command
-                runExternal(tokens, &i, &n_tokens);
+                runExternal(tokens, &i, &n_tokens,qbuf);
             }
         }
         printf("\n");

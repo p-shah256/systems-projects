@@ -102,14 +102,12 @@ int runExternal(char** tokens, int *i, int *n_tokens, char *qbuf) {
 
     else if (pid == 0) {
             // printf("from child \n");
-        // This block is executed by the child process (pid == 0)
             // printf("Child process: PID = %d, Parent PID = %d\n", getpid(), getppid());
-        // Optionally replace the child process with a new program (exec...)
-        int result = execvp(tokens[*i], tokens);
-        if (result != 0) {
-            printf("  ERROR: command '%s' not found\n", tokens[*i]);
+        signal(SIGINT, SIG_DFL);
+        if (execvp(tokens[*i], tokens) == -1) {
+            fprintf(stderr, "%s: %s\n", tokens[*i], strerror(errno));
+            exit(EXIT_FAILURE); 
         }
-        exit(0);
     }
 
     else {

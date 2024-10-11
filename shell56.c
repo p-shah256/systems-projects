@@ -291,12 +291,16 @@ int main(int argc, char **argv)
                 }
             }
         }
+        char *arg = "\0";
+        char *file = "\0";
+        int isRedirect = 0;
+        int argc;
         // quick hack for checking if redirecting can work
         //redirect does work for command to output, however throws an error if no
         //such file exists, next step is to incorporate into as part of arguement
         //that fork will create a process for
         
-        char *arg = "\0";
+        /*char *arg = "\0";
         char *file = "\0";
         int isRedirect = 0;
         int argc;
@@ -325,13 +329,13 @@ int main(int argc, char **argv)
                 runRedirectExternal(commands, file, arg, argc);
                 break;
             }
-        }
+        }*/
         // DEBUG:
         // printf("Number of tokens: %d \n", n_tokens);
         // printf("line:");
 
 
-        pipes(tokens, &n_tokens);
+        //pipes(tokens, &n_tokens);
 
         for (int i = 0; i < n_tokens; i++) {
             // DEBUG:
@@ -386,7 +390,39 @@ int main(int argc, char **argv)
                         }
                     }
                 }*/
-                runExternal(tokens, &i, &n_tokens,qbuf);
+        if(isRedirect == 0){
+
+        for(int y=0; y < n_tokens;y++) {
+            if(strcmp(tokens[y],">") == 0) {
+                char *commands[y];
+                for(int i=0;i<y;i++) {
+                    commands[i] = tokens[i];
+                }
+                arg = ">";
+                file = tokens[y+1];
+                isRedirect = 1;
+                argc = y;
+                runRedirectExternal(commands, file, arg, argc);
+                break;
+            }
+            else if (strcmp(tokens[y],"<") == 0) {
+                char *commands[y];
+                for(int i=0;i<y;i++){
+                    commands[i] = tokens[i];
+                }
+                arg = "<";
+                file = tokens[y+1];
+                isRedirect = 1;
+                argc = y;
+                runRedirectExternal(commands, file, arg, argc);
+                break;
+            }
+        }
+            }
+                if(isRedirect != 1){
+                    runExternal(tokens, &i, &n_tokens,qbuf);
+                }
+                
             }
         }
         printf("\n");

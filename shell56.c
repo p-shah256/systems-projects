@@ -79,15 +79,23 @@ int runcd(int argc, char **argv){
     }
     return 0;
 }
+//when calling external commands, create a child process for that command
+//if there are more than one command, must the next command, check for pipes, and keep adding
+//to the fork list
+pid_t proc_fork(){
+    return fork();
+}
 
 int runExternal(char** tokens, int *i, int *n_tokens, char *qbuf) {
         // printf("\n external called \n");
         // printf("tokens[i]: '%s', tokens[i+1]: '%s' \n", tokens[i], tokens[i+1]);
     // create a varible to store pid
      //status code for waiting for child process to end
+
+    pid_t pids[16];
     int status;
     pid_t pid;
-    pid = fork();
+    pid = proc_fork();
     if (pid < 0) {
         perror("Fork Failed");
     }
@@ -110,23 +118,10 @@ int runExternal(char** tokens, int *i, int *n_tokens, char *qbuf) {
             // printf("Parent process: PID = %d, Child PID = %d\n", getpid(), pid);
 
         // Wait for the child process to finish
-        //works
+        //works, adds status code of to qbuf
         waitpid(pid, &status, 0);
         if(WIFEXITED(status)){
             sprintf(qbuf,"%d",WEXITSTATUS(status));
-            //printf("\nParent grabbed child exit code: %c",qbuf[0]);
-            //printf("\n%s",tokens[1]);
-            //this loop is causing break in read access
-            //goal is to wait for child process to exit and read the status code
-            //into char array qbuf, and then loop
-            //through tokens to string compare to $? and attach the pointer to qbuf at
-            //that location in tokens array
-            /*for(int i=0;i<n_tokens;i++){
-                printf("%s",tokens[i]);
-                if(strcmp(tokens[i],"$?") == 0){
-                    tokens[i] = &qbuf;
-                }
-            }*/
         }
 
             // printf("Child process finished\n");
@@ -136,6 +131,41 @@ int runExternal(char** tokens, int *i, int *n_tokens, char *qbuf) {
     return 0;
 }
 
+int runRedirectExternal(char *command1,char *file, char* arg){
+    pid_t pid = proc_fork();
+    char syscall[100];
+    FILE *fp;
+    if (pid < 0) {
+        perror("Fork Failed");
+    }
+
+    else if (pid == 0) {
+        if(strcmp(arg,">") == 0){
+            fp = fopen(file,"w");
+            if(fp == NULL){
+                perror("Error writing to file");
+                return 1;
+            }
+            sprintf(syscall, "%s > %s",command1,file);
+        }
+        else{
+            fp = fopen(file,"r");
+            if(fp == NULL){
+                perror("Error writing to file");
+                return 1;
+            }
+            sprintf(syscall, "%s < %s",command1,file);
+        }
+        system(syscall);
+        fclose(fp);
+        exit(0);
+    }
+    else{
+        //parent here
+    }
+    
+    return 0;
+}
 
 int main(int argc, char **argv)
 {
@@ -183,12 +213,38 @@ int main(int argc, char **argv)
         /* read a line, tokenize it, and print it out
          */
         int n_tokens = parse(line, max_tokens, tokens, linebuf, sizeof(linebuf));
+        //Reads exit status of child processes and shares exit code with token array if
+        //user types the special variable
         if(qbuf[0] != "\0"){
             for(int i = 0; i < n_tokens; i++){
                 if(strcmp(tokens[i],"$!") == 0){
                     tokens[i] = qbuf;
                 }
             }
+        }
+        // quick hack for checking if redirecting can work
+        //redirect does work for command to output, however throws an error if no 
+        //such file exists, next step is to incorporate into as part of arguement
+        //that fork will create a process for
+        char *command1;
+        char *arg;
+        char *file;
+        for(int y=0; y < n_tokens;y++){
+            if(strcmp(tokens[y],">") == 0){
+                command1 = tokens[y-1];
+                arg = ">";
+                file = tokens[y+1];
+                break;
+            }
+            else if (strcmp(tokens[y],"<") == 0) {
+                command1 = tokens[y-1];
+                arg = "<";
+                file = tokens[y+1];
+                break;
+            }
+        }
+        if(command1 != "\0" && arg != "\0" && file != "\0"){
+            runRedirectExternal(command1, file, arg);
         }
         // DEBUG:
         // printf("Number of tokens: %d \n", n_tokens);
@@ -228,20 +284,45 @@ int main(int argc, char **argv)
                 //exit(atoi(argv[0]));
                 runexit(j,argv);
 
+            } //part 6 redirections, might have to change outside this loop
+            // as this loop will not pick up redirect symbols before any preceeding commands
+            else if(strcmp(tokens[i],">") == 0 || strcmp(tokens[i],"<") == 0 ){
+                char *command1;
+                char *arg;
+                char *file;
+                /*for(int y=0; y < n_tokens;y++){
+                    if(strcmp(tokens[y],">") == 0){
+                        command1 = tokens[y-1];
+                        arg = ">";
+                        file = tokens[y+1];
+                        break;
+                    }
+                    else{
+                        command1 = tokens[y-1];
+                        arg = "<";
+                        file = tokens[y+1];
+                        break;
+                    }
+                }*/
+                command1 = tokens[i - 1];
+                arg = tokens[i];
+                file = tokens[i+1];
+                runRedirectExternal(command1,file,arg);
             }
-            //instead of running just the exit command, checking if can run exit externally
-            // so we can capture exit status and attach to $? variable
             // part 3: external commands with NO I/o redirections
             else {
                 // NOTE:    considers everything after external as a part of that command
                 //          updates i = n_tokens
                 //
                 // WHY: otherwise it will treat each word as an external command
+
                 runExternal(tokens, &i, &n_tokens,qbuf);
+                
             }
         }
-        printf("\n");
+        //printf("\n");
     }
 }
+
 
 

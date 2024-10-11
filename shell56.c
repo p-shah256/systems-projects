@@ -230,35 +230,6 @@ int pipes(char **tokens, int *n_tokens) {
     if (pid < 0) {
         perror("Fork Failed");
     }
-
-    // CHILD 1
-    else if (pid == 0) {
-        dup2(fds[1], STDOUT_FILENO); // Redirect stdout to pipe
-        close(fds[0]); // Close unused read end
-        close(fds[1]); // Close write end after dup2
-        execlp("ls", "ls", NULL); // Execute ls
-    }
-    // PARENT
-    else {
-        pid_t pid2 = fork();
-        if (pid2 < 0) {
-             perror("Fork Failed");
-        }
-         // CHILD 2 (consumer) - This child will read from the pipe and execute `grep`
-        else if (pid2 == 0) {
-            dup2(fds[0], STDIN_FILENO);  // Redirect stdin to the pipe's read end
-            close(fds[1]);  // Close unused write end in this child
-            close(fds[0]);  // Close the read end after redirection
-            execlp("grep", "grep", ".c", NULL);  // Execute `grep .c`
-        }
-    waitpid(pid, &status, 0);  // Wait for the first child (ls) to finish
-    waitpid(pid2, &status, 0); // Wait for the second child (grep) to finish
-    }
-
-   // PARENT - Close the pipe in the parent, and wait for both children to finish
-    close(fds[0]);  // Close both ends of the pipe
-    close(fds[1]);
-
     // Wait for both children to finish
     return 0;
 }

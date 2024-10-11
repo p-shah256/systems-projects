@@ -90,33 +90,42 @@ pid_t proc_fork(){
 //          │                  STEP 3: run EXTERNAL                   │
 //          ╰─────────────────────────────────────────────────────────╯
 int runExternal(char** tokens, int *i, int *n_tokens, char *qbuf) {
-        // printf("\n external called \n");
-        // printf("tokens[i]: '%s', tokens[i+1]: '%s' \n", tokens[i], tokens[i+1]);
+    printf("\n external called \n");
+    printf("tokens[i]: '%s', tokens[i+1]: '%s' \n", tokens[*i], tokens[*i+1]);
     // create a varible to store pid
      //status code for waiting for child process to end
-
     pid_t pids[16];
     int status;
     pid_t pid;
+    int null_token = 0;
     pid = proc_fork();
+
+    // CHANGE: look for a null token and set I to that instead of setting it to last token
+    for (int j = *i; j < *n_tokens; j++) {
+        if (tokens[j] == NULL) {
+            null_token = j;
+            break;
+        }
+    }
+
     if (pid < 0) {
         perror("Fork Failed");
     }
 
     else if (pid == 0) {
-            // printf("from child \n");
-            // printf("Child process: PID = %d, Parent PID = %d\n", getpid(), getppid());
+        printf("from child \n");
+        printf("    Child process: PID = %d, Parent PID = %d\n", getpid(), getppid());
+        printf("    running commannd: %s and %s",tokens[*i], tokens[*i+1]);
         signal(SIGINT, SIG_DFL);
-        if (execvp(tokens[*i], tokens) == -1) {
-            fprintf(stderr, "%s: %s\n", tokens[*i], strerror(errno));
-            exit(EXIT_FAILURE);
+        if (execvp(tokens[*i], &tokens[*i]) == -1) {
+        fprintf(stderr, "%s: %s\n", tokens[*i], strerror(errno));
+        exit(EXIT_FAILURE);
         }
     }
 
     else {
-            // printf("from parent \n");
-        // This block is executed by the parent process (pid > 0)
-            // printf("Parent process: PID = %d, Child PID = %d\n", getpid(), pid);
+            printf("from parent \n");
+            printf("    Parent process: PID = %d, Child PID = %d\n", getpid(), pid);
 
         // Wait for the child process to finish
         //works, adds status code of to qbuf
@@ -125,10 +134,10 @@ int runExternal(char** tokens, int *i, int *n_tokens, char *qbuf) {
             sprintf(qbuf,"%d",WEXITSTATUS(status));
         }
 
-            // printf("Child process finished\n");
+            printf("Child process finished\n");
     }
 
-    *i = *n_tokens;
+    *i = null_token;
     return 0;
 }
 
@@ -173,66 +182,29 @@ int runRedirectExternal(char **commands,char *file, char* arg, int argc){
 //          ╭─────────────────────────────────────────────────────────╮
 //          │                      STEP 5: PIPEs                      │
 //          ╰─────────────────────────────────────────────────────────╯
-void extract_commands_array(char **tokens, int *n_tokens, char **commands, int *command_count) {
-    const int max_command_length = 50;
-
-    // Allocate space for the current command (max 50 chars)
-    char *command = malloc(max_command_length * sizeof(char));
-    if (command == NULL) {
-        printf("Memory allocation failed\n");
-        return;  // Exit if memory allocation fails
-    }
-    strcpy(command, "");  // Initialize command as an empty string
-
+void modify_tokens_array(char **tokens, int *n_tokens, int *command_count) {
     for (int i = 0; i < *n_tokens; i++) {
         // If we find a pipe, add the current command to commands[] and reset command
         if (strcmp(tokens[i], "|") == 0) {
-            // Store a copy of the command in the commands array
-            commands[*command_count] = strdup(command);  // Make a copy of command
-            (*command_count)++;  // Increment the command count correctly
-            strcpy(command, "");  // Reset command
-        } else {
-            // Concatenate the current token to the command
-            strcat(command, tokens[i]);
-            strcat(command, " ");  // Add a space after each token
+            tokens[i] = NULL;
         }
     }
 
-    // Handle the last command if it exists
-    if (strlen(command) > 0) {
-        commands[*command_count] = strdup(command);
-        (*command_count)++;  // Increment command count correctly
+    printf("\nPrinting commands:\n");
+    for (int i = 0; i < *n_tokens; i++) {
+        printf("%s \n", tokens[i]);
     }
-
-    // Free the temporary command buffer
-    free(command);
 }
 
 int pipes(char **tokens, int *n_tokens) {
     //  ├────────────────┤ 1. extract commands into an array ├────────────────┤
-    const int max_commands = 32;
-    char *commands[max_commands];  // Array to hold commands
     int command_count = 0;
+
     // Extract the commands from the tokens
-    extract_commands_array(tokens, n_tokens, commands, &command_count);
+    modify_tokens_array(tokens, n_tokens, &command_count);
+    
+    // 2.
 
-    // Print and free allocated memory for commands
-    printf("\nPrinting commands:\n");
-    for (int i = 0; i < command_count; i++) {
-        printf("%s\n", commands[i]);  // Print each command
-    }
-
-    // 2. create childs and exec
-    int fds[2];
-    pipe(fds);
-    pid_t pids[16];
-    int status;
-    pid_t pid;
-    pid = proc_fork();
-    if (pid < 0) {
-        perror("Fork Failed");
-    }
-    // Wait for both children to finish
     return 0;
 }
 
@@ -299,7 +271,7 @@ int main(int argc, char **argv)
         //redirect does work for command to output, however throws an error if no
         //such file exists, next step is to incorporate into as part of arguement
         //that fork will create a process for
-        
+
         /*char *arg = "\0";
         char *file = "\0";
         int isRedirect = 0;
@@ -335,7 +307,7 @@ int main(int argc, char **argv)
         // printf("line:");
 
 
-        //pipes(tokens, &n_tokens);
+        pipes(tokens, &n_tokens);
 
         for (int i = 0; i < n_tokens; i++) {
             // DEBUG:
@@ -390,36 +362,37 @@ int main(int argc, char **argv)
                         }
                     }
                 }*/
-        if(isRedirect == 0){
-
-        for(int y=0; y < n_tokens;y++) {
-            if(strcmp(tokens[y],">") == 0) {
-                char *commands[y];
-                for(int i=0;i<y;i++) {
-                    commands[i] = tokens[i];
-                }
-                arg = ">";
-                file = tokens[y+1];
-                isRedirect = 1;
-                argc = y;
-                runRedirectExternal(commands, file, arg, argc);
-                break;
-            }
-            else if (strcmp(tokens[y],"<") == 0) {
-                char *commands[y];
-                for(int i=0;i<y;i++){
-                    commands[i] = tokens[i];
-                }
-                arg = "<";
-                file = tokens[y+1];
-                isRedirect = 1;
-                argc = y;
-                runRedirectExternal(commands, file, arg, argc);
-                break;
-            }
-        }
-            }
-                if(isRedirect != 1){
+        // if(isRedirect == 0){
+        //
+        // for(int y=0; y < n_tokens;y++) {
+        //     if(strcmp(tokens[y],">") == 0) {
+        //         char *commands[y];
+        //         for(int i=0;i<y;i++) {
+        //             commands[i] = tokens[i];
+        //         }
+        //         arg = ">";
+        //         file = tokens[y+1];
+        //         isRedirect = 1;
+        //         argc = y;
+        //         runRedirectExternal(commands, file, arg, argc);
+        //         break;
+        //     }
+        //     else if (strcmp(tokens[y],"<") == 0) {
+        //         char *commands[y];
+        //         for(int i=0;i<y;i++){
+        //             commands[i] = tokens[i];
+        //         }
+        //         arg = "<";
+        //         file = tokens[y+1];
+        //         isRedirect = 1;
+        //         argc = y;
+        //         runRedirectExternal(commands, file, arg, argc);
+        //         break;
+        //     }
+        // }
+        //     }
+        //
+        if(isRedirect != 1){
                     runExternal(tokens, &i, &n_tokens,qbuf);
                 }
                 

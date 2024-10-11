@@ -86,6 +86,9 @@ pid_t proc_fork(){
     return fork();
 }
 
+//          ╭─────────────────────────────────────────────────────────╮
+//          │                  STEP 3: run EXTERNAL                   │
+//          ╰─────────────────────────────────────────────────────────╯
 int runExternal(char** tokens, int *i, int *n_tokens, char *qbuf) {
         // printf("\n external called \n");
         // printf("tokens[i]: '%s', tokens[i+1]: '%s' \n", tokens[i], tokens[i+1]);
@@ -162,6 +165,47 @@ int runRedirectExternal(char *command1,char *file, char* arg){
         //parent here
     }
     
+    return 0;
+}
+
+//          ╭─────────────────────────────────────────────────────────╮
+//          │                      STEP 5: PIPEs                      │
+//          ╰─────────────────────────────────────────────────────────╯
+int pipes(char** tokens, int *n_tokens, char *qbuf) {
+    /* check if token[i+1] is pipe
+     *    if true:
+     *      fork the current process
+     *      change file descriptors
+     *      exec token[i]
+     *      exec token[i+2]
+     */
+    // "ls | grep '123.txt' | cat "
+    
+    const int max_commands = 32;
+    char *commands[max_commands];
+    int command_count = 0;
+    int last_pipe_index = 0;
+    for (int i = 0; i < *n_tokens; i++) {
+        if (strcmp(tokens[i], "|") == 0) {
+            last_pipe_index = i;
+            // printf("pipe found");
+            // printf("\n %s", tokens[i]);
+            //
+            commands[command_count] = tokens[i-1];
+            // this isn't correct, everything is a command until:
+            //          1. a new pipe
+            //          2. or end of tokens
+            command_count++;
+        }
+        else if (i <= n_tokens) {
+            commands[command_count] = tokens[last_pipe_index]; // to command_cout
+        }
+    }
+    printf("\n printig commands");
+    for (int i = 0; i < *n_tokens; i++) {
+            printf("\n %s", commands[i]);
+    }
+
     return 0;
 }
 
@@ -247,9 +291,14 @@ int main(int argc, char **argv)
         // DEBUG:
         // printf("Number of tokens: %d \n", n_tokens);
         // printf("line:");
+
+
+        pipes(tokens, &n_tokens, qbuf);
+
         for (int i = 0; i < n_tokens; i++) {
             // DEBUG:
             // printf(" '%s'", tokens[i]);
+
             if (strcmp(tokens[i],"pwd") == 0) {
                 // printf("\n pwd called");
                 runpwd();
@@ -315,7 +364,6 @@ int main(int argc, char **argv)
                 // WHY: otherwise it will treat each word as an external command
 
                 runExternal(tokens, &i, &n_tokens,qbuf);
-                
             }
         }
         //printf("\n");

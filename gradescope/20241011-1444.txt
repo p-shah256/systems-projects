@@ -1,0 +1,67 @@
+    TEST 0: empty line
+    0a : EOF exit 0 : SUCCESS
+    0b : EOF no output : SUCCESS
+    TEST 1: bad pipes and redirects
+    Error writing to file: No such file or directory
+    sh: 1: Syntax error: redirection unexpected
+    sh: 1: Syntax error: redirection unexpected
+    1a : exit 0 or 1 : SUCCESS
+    1b : zero-len output : FAILED
+    test -f /tmp/tmp.28 && ! test -s /tmp/tmp.28
+    TEST 2: input redirect
+    2a : exit 0 : SUCCESS
+    2b : input redirect : SUCCESS
+    TEST 3: output redirect
+    3a : exit 0 : SUCCESS
+    3b : output file permissions : FAILED
+    [ x-rw-r--r-- = x-rw-rw-r-- ]
+    3c : output redirect : SUCCESS
+    TEST 4: simple pipe
+    awk: line 2: missing } near end of file
+    4a : exit 0 : SUCCESS
+    4b : simple pipe : FAILED
+    [ '' = baz28 ]
+    TEST 5: pipe return value
+    5a : false | true : FAILED
+    [ '
+    $?' == 0 ]
+    5b : true | false : FAILED
+    [ '
+    $?' = 1 ]
+    TEST 6: pipes and redirection
+    zzz
+
+    6a : redirect, pipe : FAILED
+    [ '' = zzz ]
+    TEST 7: input redirection fails
+    Error writing to file: No such file or directory
+    7a : exit 0 or 1 : SUCCESS
+    TEST 8: blank line, EOF
+    8a : exit 0 : SUCCESS
+    TEST 9: cd - various cases
+    9a : cd : FAILED
+    [ 'exit code ' = 'exit code 0' -a ' cd called, token number: 0' = /root ]
+    9b : cd /tmp : FAILED
+    [ 'exit code cd called without any args' = 'exit code 0' -a '0' = /tmp ]
+    9c : cd /bad : FAILED
+    [ 'exit code Current working directory: /autograder/submission/team-13-lab2' = 'exit code 1' -a '' = 'cd: No such file or directory' ]
+    9c : cd 1 2 : FAILED
+    [ 'exit code ' = 'exit code 1' -a '' = 'cd: wrong number of arguments' ]
+    TEST 10: exit
+    10a : exit : FAILED
+    [ 0 = 0 -a -f /tmp/tmp.28 -a ! -s /tmp/tmp.28 ]
+    10b : exit 5 : FAILED
+    [ 5 = 5 -a -f /tmp/tmp.28 -a ! -s /tmp/tmp.28 ]
+    10c : exit 5 6 : FAILED
+    [ 1 = 3 -a ' exit called, token number: 0=================================================================' = 1 -a '' = 'exit: too many arguments' ]
+    TEST 11: double, triple pipe
+    11a : exit success : SUCCESS
+    11b : double pipe : FAILED
+    [ 'bar bat | cat | sed s/x/y/' = 'bar bat' ]
+    11b : triple pipe : FAILED
+    [ '' = 'foo bar' ]
+    TEST 12: dangling pipes
+    12a : exit success : SUCCESS
+    TEST 13: file descriptor leak
+    13a : <6 file descriptors (should actually be 3...) : SUCCESS
+    FAILED tests: 1b 3b 4b 5a 5b 6a 9a 9b 9c 9c 10a 10b 10c 11b 11b

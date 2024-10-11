@@ -109,7 +109,7 @@ int runExternal(char** tokens, int *i, int *n_tokens, char *qbuf) {
         signal(SIGINT, SIG_DFL);
         if (execvp(tokens[*i], tokens) == -1) {
             fprintf(stderr, "%s: %s\n", tokens[*i], strerror(errno));
-            exit(EXIT_FAILURE); 
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -132,39 +132,41 @@ int runExternal(char** tokens, int *i, int *n_tokens, char *qbuf) {
     return 0;
 }
 
-int runRedirectExternal(char *command1,char *file, char* arg){
-    pid_t pid = proc_fork();
+int runRedirectExternal(char **commands,char *file, char* arg, int argc){
+    //printf("arg is : %s\n",arg);
+    //printf("file is %s",file);
+    //printf("number of commands are %d\n",argc);
     char syscall[100];
+    char results[100] = {0};
     FILE *fp;
-    if (pid < 0) {
-        perror("Fork Failed");
+    for(int i=0;i<argc;i++){
+        //printf(" each command is %c:\n",commands[i]);
+        strcat(results,commands[i]);
+        if(i < argc - 1){
+            strcat(results," ");
+        }
+        
     }
-
-    else if (pid == 0) {
-        if(strcmp(arg,">") == 0){
-            fp = fopen(file,"w");
-            if(fp == NULL){
-                perror("Error writing to file");
-                return 1;
-            }
-            sprintf(syscall, "%s > %s",command1,file);
+    //printf("results are: %s\n ", results);
+    if(strcmp(arg,">") == 0){
+        fp = fopen(file,"w");
+        if(fp == NULL){
+            perror("Error writing to file");
+            return 1;
         }
-        else{
-            fp = fopen(file,"r");
-            if(fp == NULL){
-                perror("Error writing to file");
-                return 1;
-            }
-            sprintf(syscall, "%s < %s",command1,file);
-        }
-        system(syscall);
-        fclose(fp);
-        exit(0);
+        snprintf(syscall,sizeof(syscall), "%s> %s",results,file);
     }
     else{
-        //parent here
+        fp = fopen(file,"r");
+        if(fp == NULL){
+            perror("Error writing to file");
+            return 1;
+        }
+        snprintf(syscall,sizeof(syscall), "%s< %s",results,file);
     }
-    
+    //printf("syscall to start is %s",syscall);
+    system(syscall);
+    fclose(fp);
     return 0;
 }
 
@@ -257,44 +259,56 @@ int main(int argc, char **argv)
         int n_tokens = parse(line, max_tokens, tokens, linebuf, sizeof(linebuf));
         //Reads exit status of child processes and shares exit code with token array if
         //user types the special variable
-        if(qbuf[0] != "\0"){
-            for(int i = 0; i < n_tokens; i++){
+        if (qbuf[0] != "\0") {
+            for(int i = 0; i < n_tokens; i++) {
                 if(strcmp(tokens[i],"$!") == 0){
                     tokens[i] = qbuf;
                 }
             }
         }
         // quick hack for checking if redirecting can work
-        //redirect does work for command to output, however throws an error if no 
+        //redirect does work for command to output, however throws an error if no
         //such file exists, next step is to incorporate into as part of arguement
         //that fork will create a process for
-        char *command1;
-        char *arg;
-        char *file;
-        for(int y=0; y < n_tokens;y++){
-            if(strcmp(tokens[y],">") == 0){
-                command1 = tokens[y-1];
+        
+        char *arg = "\0";
+        char *file = "\0";
+        int isRedirect = 0;
+        int argc;
+        for(int y=0; y < n_tokens;y++) {
+            if(strcmp(tokens[y],">") == 0) {
+                char *commands[y];
+                for(int i=0;i<y;i++) {
+                    commands[i] = tokens[i];
+                }
                 arg = ">";
                 file = tokens[y+1];
+                isRedirect = 1;
+                argc = y;
+                runRedirectExternal(commands, file, arg, argc);
                 break;
             }
             else if (strcmp(tokens[y],"<") == 0) {
-                command1 = tokens[y-1];
+                char *commands[y];
+                for(int i=0;i<y;i++){
+                    commands[i] = tokens[i];
+                }
                 arg = "<";
                 file = tokens[y+1];
+                isRedirect = 1;
+                argc = y;
+                runRedirectExternal(commands, file, arg, argc);
                 break;
             }
-        }
-        if(command1 != "\0" && arg != "\0" && file != "\0"){
-            runRedirectExternal(command1, file, arg);
         }
         // DEBUG:
         // printf("Number of tokens: %d \n", n_tokens);
         // printf("line:");
 
 
-        pipes(tokens, &n_tokens, qbuf);
-
+        //pipes(tokens, &n_tokens, qbuf);
+        if(isRedirect == 0) {
+            
         for (int i = 0; i < n_tokens; i++) {
             // DEBUG:
             // printf(" '%s'", tokens[i]);
@@ -332,42 +346,30 @@ int main(int argc, char **argv)
                 runexit(j,argv);
 
             } //part 6 redirections, might have to change outside this loop
-            // as this loop will not pick up redirect symbols before any preceeding commands
-            else if(strcmp(tokens[i],">") == 0 || strcmp(tokens[i],"<") == 0 ){
-                char *command1;
-                char *arg;
-                char *file;
-                /*for(int y=0; y < n_tokens;y++){
-                    if(strcmp(tokens[y],">") == 0){
-                        command1 = tokens[y-1];
-                        arg = ">";
-                        file = tokens[y+1];
-                        break;
-                    }
-                    else{
-                        command1 = tokens[y-1];
-                        arg = "<";
-                        file = tokens[y+1];
-                        break;
-                    }
-                }*/
-                command1 = tokens[i - 1];
-                arg = tokens[i];
-                file = tokens[i+1];
-                runRedirectExternal(command1,file,arg);
-            }
+            // as this loop will not pick up redirect symbols before any preceeding command
             // part 3: external commands with NO I/o redirections
             else {
                 // NOTE:    considers everything after external as a part of that command
                 //          updates i = n_tokens
                 //
                 // WHY: otherwise it will treat each word as an external command
-
+                //if there is no redirect run externally, if there is a redirect, run redirectExternally
+                //if there is a redirect then a pipe
+                /*for(int j=0;j<n_tokens;j++){
+                    if(strcmp(tokens[j],"<") == 0 || strcmp(tokens[j],">") == 0){
+                        if(tokens[j-1] != "\0" && tokens[j+1] != "\0"){
+                            runRedirectExternal(tokens[j-1],tokens[j],tokens[j+1]);
+                        }
+                    }
+                }*/
                 runExternal(tokens, &i, &n_tokens,qbuf);
             }
         }
-        //printf("\n");
+        printf("\n");
     }
+    //printf("\n");
+    }
+
 }
 
 

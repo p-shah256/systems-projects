@@ -2,8 +2,10 @@
 Makefile
 README.md
 file.txt
+lsFile.txt
 parser.c
 parser.h
+pwdFile.txt
 shell56
 shell56.c
 shell56.dSYM

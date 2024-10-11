@@ -173,41 +173,66 @@ int runRedirectExternal(char **commands,char *file, char* arg, int argc){
 //          ╭─────────────────────────────────────────────────────────╮
 //          │                      STEP 5: PIPEs                      │
 //          ╰─────────────────────────────────────────────────────────╯
-int pipes(char** tokens, int *n_tokens, char *qbuf) {
-    /* check if token[i+1] is pipe
-     *    if true:
-     *      fork the current process
-     *      change file descriptors
-     *      exec token[i]
-     *      exec token[i+2]
-     */
-    // "ls | grep '123.txt' | cat "
-    
-    const int max_commands = 32;
-    char *commands[max_commands];
-    int command_count = 0;
-    int last_pipe_index = 0;
-    for (int i = 0; i < *n_tokens; i++) {
-        if (strcmp(tokens[i], "|") == 0) {
-            last_pipe_index = i;
-            // printf("pipe found");
-            // printf("\n %s", tokens[i]);
-            //
-            commands[command_count] = tokens[i-1];
-            // this isn't correct, everything is a command until:
-            //          1. a new pipe
-            //          2. or end of tokens
-            command_count++;
-        }
-        else if (i <= n_tokens) {
-            commands[command_count] = tokens[last_pipe_index]; // to command_cout
-        }
+void extract_commands_array(char **tokens, int *n_tokens, char **commands, int *command_count) {
+    const int max_command_length = 50;
+
+    // Allocate space for the current command (max 50 chars)
+    char *command = malloc(max_command_length * sizeof(char));
+    if (command == NULL) {
+        printf("Memory allocation failed\n");
+        return;  // Exit if memory allocation fails
     }
-    printf("\n printig commands");
+    strcpy(command, "");  // Initialize command as an empty string
+
     for (int i = 0; i < *n_tokens; i++) {
-            printf("\n %s", commands[i]);
+        // If we find a pipe, add the current command to commands[] and reset command
+        if (strcmp(tokens[i], "|") == 0) {
+            // Store a copy of the command in the commands array
+            commands[*command_count] = strdup(command);  // Make a copy of command
+            (*command_count)++;  // Increment the command count correctly
+            strcpy(command, "");  // Reset command
+        } else {
+            // Concatenate the current token to the command
+            strcat(command, tokens[i]);
+            strcat(command, " ");  // Add a space after each token
+        }
     }
 
+    // Handle the last command if it exists
+    if (strlen(command) > 0) {
+        commands[*command_count] = strdup(command);
+        (*command_count)++;  // Increment command count correctly
+    }
+
+    // Free the temporary command buffer
+    free(command);
+}
+
+int pipes(char **tokens, int *n_tokens) {
+    //  ├────────────────┤ 1. extract commands into an array ├────────────────┤
+    const int max_commands = 32;
+    char *commands[max_commands];  // Array to hold commands
+    int command_count = 0;
+    // Extract the commands from the tokens
+    extract_commands_array(tokens, n_tokens, commands, &command_count);
+
+    // Print and free allocated memory for commands
+    printf("\nPrinting commands:\n");
+    for (int i = 0; i < command_count; i++) {
+        printf("%s\n", commands[i]);  // Print each command
+    }
+
+    // 2. create childs and exec
+    int fds[2];
+    pipe(fds);
+    pid_t pids[16];
+    int status;
+    pid_t pid;
+    pid = proc_fork();
+    if (pid < 0) {
+        perror("Fork Failed");
+    }
+    // Wait for both children to finish
     return 0;
 }
 
@@ -306,9 +331,8 @@ int main(int argc, char **argv)
         // printf("line:");
 
 
-        //pipes(tokens, &n_tokens, qbuf);
-        if(isRedirect == 0) {
-            
+        pipes(tokens, &n_tokens);
+
         for (int i = 0; i < n_tokens; i++) {
             // DEBUG:
             // printf(" '%s'", tokens[i]);

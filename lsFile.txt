@@ -2,6 +2,7 @@
 Makefile
 README.md
 file.txt
+gradescope
 lsFile.txt
 parser.c
 parser.h

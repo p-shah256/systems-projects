@@ -12,6 +12,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <sys/stat.h>
 
 /* "" means check the local directory */
 #include "parser.h"
@@ -45,7 +46,7 @@ int runexit(int argc, char **argv){
 int runpwd(){
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("Current working directory: %s\n", cwd);
+        //printf("Current working directory: %s\n", cwd);
     }
     else {
         perror("getcwd() error");
@@ -57,7 +58,7 @@ int runpwd(){
 int runcd(int argc, char **argv){
     int status;
     if (argc == 1) {
-        printf("\n cd called without any args");
+        //printf("\n cd called without any args");
         chdir(getenv("~")); //error when returning a status from chdir, recieve access error on abort
         //otherwise without status, seems to work fine
         /*if(status != 0){
@@ -70,7 +71,7 @@ int runcd(int argc, char **argv){
         return 1;
     }
     else {
-        printf("\n cd called with an args");
+        //printf("\n cd called with an args");
         status = chdir(argv[1]);
         if(status != 0){
             fprintf("cd: %s\n", strerror(status));
@@ -132,41 +133,75 @@ int runExternal(char** tokens, int *i, int *n_tokens, char *qbuf) {
     return 0;
 }
 
-int runRedirectExternal(char **commands,char *file, char* arg, int argc){
+//STEP 6 REDIRECT
+
+int runRedirectExternal(char *command, char *filename, char* redirect, char **argv, int argc){
     //printf("arg is : %s\n",arg);
     //printf("file is %s",file);
     //printf("number of commands are %d\n",argc);
-    char syscall[100];
-    char results[100] = {0};
+    //instead of syscall, using lower level version of fopen
+    // need to use open, must handle commands like grep, tr, cat, etc
+    // cmd name, arguements/pattern, file name is that is needed
+    // parameters for program should be cmd name, file name, arguement, cmd arguement ... ellipsis for
+    //additional commands
+    //char syscall[100];
+    //char results[100] = {0};
     FILE *fp;
-    for(int i=0;i<argc;i++){
+    int fd;
+    /*for(int i=0;i<argc;i++){
         //printf(" each command is %c:\n",commands[i]);
         strcat(results,commands[i]);
         if(i < argc - 1){
             strcat(results," ");
         }
         
-    }
+    }*/
     //printf("results are: %s\n ", results);
-    if(strcmp(arg,">") == 0){
-        fp = fopen(file,"w");
-        if(fp == NULL){
+    if(strcmp(redirect,">") == 0){
+        fd = open(filename, O_WRONLY | O_CREAT, 0644);
+        if (chmod(filename, 0644) == -1) {
+            perror("Error changing file permissions");
+            return 1;
+        }
+        if(fd == -1){
             perror("Error writing to file");
             return 1;
         }
-        snprintf(syscall,sizeof(syscall), "%s> %s",results,file);
+        /*//fp = fopen(file,"w");
+        if(fp == NULL){
+            perror("Error writing to file");
+            return 1;
+        }*/
+        //snprintf(syscall,sizeof(syscall), "%s> %s",results,file);
     }
     else{
-        fp = fopen(file,"r");
-        if(fp == NULL){
-            perror("Error writing to file");
+        fd = open(filename,O_RDONLY);
+        //)
+        if (chmod(filename, 0644) == -1) {
+            perror("Error changing file permissions");
             return 1;
         }
-        snprintf(syscall,sizeof(syscall), "%s< %s",results,file);
+        if(fd == -1){
+            perror("Error reading from file");
+            return 1;
+        }
+        if(dup2(fd,STDIN_FILENO) == -1){
+            perror("Error redirecting stdin");
+            close(fd);
+            return 1;
+        }
+        //snprintf(syscall,sizeof(syscall), "%s< %s",results,file);
     }
     //printf("syscall to start is %s",syscall);
-    system(syscall);
-    fclose(fp);
+    //system(syscall);
+    close(fd);
+    /*for(int i=0;i< argc;i++){
+        printf("%s\n",argv[i]);
+    }*/
+    if(execvp(command,argv) == -1){
+        perror("Error executing command");
+        return 1;
+    }
     return 0;
 }
 
@@ -355,12 +390,12 @@ int main(int argc, char **argv)
                     y++;
                     j++;
                 }
-                printf("\n cd called, token number: %d", i);
+                //printf("\n cd called, token number: %d", i);
                 runcd(j,argv);
             }
 
             else if(strcmp(tokens[i], "exit") == 0){
-                printf("\n exit called, token number: %d",i);
+                //printf("\n exit called, token number: %d",i);
                 char *argv[1];
                 int j = 0;
                 int y = i+1;
@@ -369,7 +404,7 @@ int main(int argc, char **argv)
                     y++;
                     j++;
                 }
-                printf("\nexit called with status %s",argv[0]);
+                //printf("\nexit called with status %s",argv[0]);
                 //exit(atoi(argv[0]));
                 runexit(j,argv);
 
@@ -394,27 +429,41 @@ int main(int argc, char **argv)
 
         for(int y=0; y < n_tokens;y++) {
             if(strcmp(tokens[y],">") == 0) {
-                char *commands[y];
+                  char *command;
+                char *arguements[y+2];
+                char *redirectSymbol;
                 for(int i=0;i<y;i++) {
-                    commands[i] = tokens[i];
+                    arguements[i] = tokens[i];
                 }
-                arg = ">";
+                command = arguements[0];
+
+                redirectSymbol = ">";
+                //arg = ">";
                 file = tokens[y+1];
+                arguements[y] = file;
+                arguements[y+1] = NULL;
                 isRedirect = 1;
-                argc = y;
-                runRedirectExternal(commands, file, arg, argc);
+                argc = y+2;
+                runRedirectExternal(command, file, redirectSymbol, arguements, argc);
                 break;
             }
             else if (strcmp(tokens[y],"<") == 0) {
-                char *commands[y];
-                for(int i=0;i<y;i++){
-                    commands[i] = tokens[i];
+                  char *command;
+                char *arguements[y+2];
+                char *redirectSymbol;
+                for(int i=0;i<y;i++) {
+                    arguements[i] = tokens[i];
                 }
-                arg = "<";
+                command = arguements[0];
+
+                redirectSymbol = "<";
+                //arg = ">";
                 file = tokens[y+1];
+                arguements[y] = file;
+                arguements[y+1] = NULL;
                 isRedirect = 1;
-                argc = y;
-                runRedirectExternal(commands, file, arg, argc);
+                argc = y+2;
+                runRedirectExternal(command, file, redirectSymbol, arguements, argc);
                 break;
             }
         }

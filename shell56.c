@@ -470,13 +470,13 @@ int main(int argc, char **argv)
                 //arguements[y] = file;
                 arguements[y] = NULL;
                 isRedirect = 1;
-                argc = y+2;
+                argc = y+1;
                 runRedirectExternal(command, file, redirectSymbol, arguements, argc);
                 break;
             }
             else if (strcmp(tokens[y],"<") == 0) {
                   char *command;
-                char *arguements[y+2];
+                char *arguements[y+1];
                 char *redirectSymbol;
                 for(int i=0;i<y;i++) {
                     arguements[i] = tokens[i];
@@ -486,10 +486,10 @@ int main(int argc, char **argv)
                 redirectSymbol = "<";
                 //arg = ">";
                 file = tokens[y+1];
-                arguements[y] = file;
-                arguements[y+1] = NULL;
+                //rguements[y] = file;
+                arguements[y] = NULL;
                 isRedirect = 1;
-                argc = y+2;
+                argc = y+1;
                 //position = i;
                 runRedirectExternal(command, file, redirectSymbol, arguements, argc);
                 break;

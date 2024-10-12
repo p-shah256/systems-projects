@@ -146,64 +146,91 @@ int runRedirectExternal(char *command, char *filename, char* redirect, char **ar
     //additional commands
     //char syscall[100];
     //char results[100] = {0};
-    FILE *fp;
-    int fd;
-    /*for(int i=0;i<argc;i++){
-        //printf(" each command is %c:\n",commands[i]);
-        strcat(results,commands[i]);
-        if(i < argc - 1){
-            strcat(results," ");
-        }
-        
-    }*/
-    //printf("results are: %s\n ", results);
-    if(strcmp(redirect,">") == 0){
-        fd = open(filename, O_WRONLY | O_CREAT, 0644);
-        if (chmod(filename, 0644) == -1) {
-            perror("Error changing file permissions");
-            return 1;
-        }
-        if(fd == -1){
-            perror("Error writing to file");
-            return 1;
-        }
-        /*//fp = fopen(file,"w");
-        if(fp == NULL){
-            perror("Error writing to file");
-            return 1;
-        }*/
-        //snprintf(syscall,sizeof(syscall), "%s> %s",results,file);
-    }
-    else{
-        fd = open(filename,O_RDONLY);
-        //)
-        if (chmod(filename, 0644) == -1) {
-            perror("Error changing file permissions");
-            return 1;
-        }
-        if(fd == -1){
-            perror("Error reading from file");
-            return 1;
-        }
-        if(dup2(fd,STDIN_FILENO) == -1){
-            perror("Error redirecting stdin");
-            close(fd);
-            return 1;
-        }
-        //snprintf(syscall,sizeof(syscall), "%s< %s",results,file);
-    }
-    //printf("syscall to start is %s",syscall);
-    //system(syscall);
-    close(fd);
+    
     /*for(int i=0;i< argc;i++){
         printf("%s\n",argv[i]);
     }*/
-    if(execvp(command,argv) == -1){
-        perror("Error executing command");
-        return 1;
+    //char ** args;
+    char ** args = argv;
+    pid_t pids[16];
+    int status;
+    pid_t pid;
+    pid = proc_fork();
+    if (pid < 0) {
+    perror("Fork Failed");
     }
+    
+    else if (pid == 0) {
+        FILE *fp;
+        int fd;
+        if(strcmp(redirect,">") == 0){
+            fd = open(filename, O_WRONLY | O_CREAT, 0644);
+            if (chmod(filename, 0644) == -1) {
+                perror("Error changing file permissions");
+                return 1;
+            }
+            if(fd == -1){
+                perror("Error writing to file");
+                return 1;
+            }
+            if(dup2(fd,STDOUT_FILENO) == -1){
+                perror("Error redirecting stdin");
+                close(fd);
+                return 1;
+            }
+            /*//fp = fopen(file,"w");
+             if(fp == NULL){
+             perror("Error writing to file");
+             return 1;
+             }*/
+            //snprintf(syscall,sizeof(syscall), "%s> %s",results,file);
+        }
+        else{
+            fd = open(filename,O_RDONLY);
+            //)
+            if (chmod(filename, 0644) == -1) {
+                perror("Error changing file permissions");
+                return 1;
+            }
+            if(fd == -1){
+                perror("Error reading from file");
+                return 1;
+            }
+            if(dup2(fd,STDIN_FILENO) == -1){
+                perror("Error redirecting stdin");
+                close(fd);
+                return 1;
+            }
+            //snprintf(syscall,sizeof(syscall), "%s< %s",results,file);
+        }
+        //printf("syscall to start is %s",syscall);
+        //system(syscall);
+        close(fd);
+        // printf("from child \n");
+        // printf("Child process: PID = %d, Parent PID = %d\n", getpid(), getppid());
+        signal(SIGINT, SIG_DFL);
+        if(execvp(command,argv) == -1){
+            perror("Error executing command");
+            return 1;
+        }
+    }
+    else {
+    // printf("from parent \n");
+    // This block is executed by the parent process (pid > 0)
+    // printf("Parent process: PID = %d, Child PID = %d\n", getpid(), pid);
+    
+    // Wait for the child process to finish
+    //works, adds status code of to qbuf
+    waitpid(pid, &status, 0);
+    if(WIFEXITED(status)){
+        // sprintf(qbuf,"%d",WEXITSTATUS(status));
+    }
+
+// printf("Child process finished\n");
+}
     return 0;
 }
+
 
 //          ╭─────────────────────────────────────────────────────────╮
 //          │                      STEP 5: PIPEs                      │
@@ -430,7 +457,7 @@ int main(int argc, char **argv)
         for(int y=0; y < n_tokens;y++) {
             if(strcmp(tokens[y],">") == 0) {
                   char *command;
-                char *arguements[y+2];
+                char *arguements[y+1];
                 char *redirectSymbol;
                 for(int i=0;i<y;i++) {
                     arguements[i] = tokens[i];
@@ -440,8 +467,8 @@ int main(int argc, char **argv)
                 redirectSymbol = ">";
                 //arg = ">";
                 file = tokens[y+1];
-                arguements[y] = file;
-                arguements[y+1] = NULL;
+                //arguements[y] = file;
+                arguements[y] = NULL;
                 isRedirect = 1;
                 argc = y+2;
                 runRedirectExternal(command, file, redirectSymbol, arguements, argc);
@@ -463,6 +490,7 @@ int main(int argc, char **argv)
                 arguements[y+1] = NULL;
                 isRedirect = 1;
                 argc = y+2;
+                //position = i;
                 runRedirectExternal(command, file, redirectSymbol, arguements, argc);
                 break;
             }

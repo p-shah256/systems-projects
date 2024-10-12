@@ -1,1 +1,13 @@
-/Users/charlescarlson/Projects/CS5600/team-13-lab2
+total 208
+-rw-r--r--  1 charlescarlson  staff      0 Oct 10 20:56 5
+-rw-r--r--  1 charlescarlson  staff    202 Oct  1 09:42 Makefile
+-rw-r--r--  1 charlescarlson  staff  17667 Oct  1 09:42 README.md
+-rw-r--r--  1 charlescarlson  staff     51 Oct 11 14:24 file.txt
+drwxr-xr-x  3 charlescarlson  staff     96 Oct 11 15:51 gradescope
+-rw-r--r--  1 charlescarlson  staff    113 Oct 12 12:23 lsFile.txt
+-rw-r--r--  1 charlescarlson  staff   3110 Oct  1 09:42 parser.c
+-rw-r--r--  1 charlescarlson  staff    453 Oct  1 09:42 parser.h
+-rw-r--r--  1 charlescarlson  staff     22 Oct 12 11:49 pwdFile.txt
+-rwxr-xr-x  1 charlescarlson  staff  39504 Oct 12 13:11 shell56
+-rw-r--r--  1 charlescarlson  staff  16672 Oct 12 13:11 shell56.c
+drwxr-xr-x  3 charlescarlson  staff     96 Oct  1 09:46 shell56.dSYM

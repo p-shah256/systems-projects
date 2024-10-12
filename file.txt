@@ -1,9 +1,0 @@
-archive.zip
-command_loop.c
-external_commands.c
-gradescope
-internal_commands.c
-parser.c
-parser.h.gch
-shell56.c
-shell56_commands.h

@@ -23,7 +23,7 @@ int runpwd();
 int runexit(int argc, char **argv);
 pid_t proc_fork();
 
-int runExternal(char **tokens, int *i, int *n_tokens, char *qbuf);
+int runExternal(Command *cmd,char *qbuf);
 
 int runRedirectExternal(Command *cmd);
 

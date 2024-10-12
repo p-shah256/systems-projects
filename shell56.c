@@ -83,6 +83,15 @@ int main(int argc, char **argv) {
     /* read a line, tokenize it, and print it out
      */
     int n_tokens = parse(line, max_tokens, tokens, linebuf, sizeof(linebuf));
+    //check for qbuf if user enters special variable
+    if (qbuf[0] != "\0") {
+      for (int i = 0; i < n_tokens; i++) {
+        if (strcmp(tokens[i], "$?") == 0) {
+          tokens[i] = qbuf;
+        }
+      }
+    }
+
     Command *cmdList = buildCommandList(n_tokens, tokens);
     while(cmdList != NULL){
         printf("Command: %s\n", cmdList->command);
@@ -104,8 +113,18 @@ int main(int argc, char **argv) {
             runexit(arrayLength(cmdList)-1,cmdList->args);
         }
         else{
-            if(cmdList->output || cmdList->input){
-                runRedirectExternal(cmdList);
+            //if there are more than command, pipe commands
+            if(cmdList->next){
+
+            }
+            //if there is only one command and is redirect
+            else{
+                if(cmdList->output || cmdList->input){
+                    runRedirectExternal(cmdList);
+                }
+                else{
+                    runExternal(cmdList, qbuf);
+                }
             }
         }
         cmdList = cmdList->next;

@@ -18,7 +18,7 @@
 //          ╭─────────────────────────────────────────────────────────╮
 //          │                  STEP 3: run EXTERNAL                   │
 //          ╰─────────────────────────────────────────────────────────╯
-int runExternal(char **tokens, int *i, int *n_tokens, char *qbuf) {
+int runExternal(Command *cmd, char *qbuf) {
   // printf("\n external called \n");
   // printf("tokens[i]: '%s', tokens[i+1]: '%s' \n", tokens[*i], tokens[*i+1]);
   // create a varible to store pid
@@ -31,12 +31,12 @@ int runExternal(char **tokens, int *i, int *n_tokens, char *qbuf) {
 
   // CHANGE: look for a null token and set I to that instead of setting it to
   // last token
-  for (int j = *i; j <= *n_tokens; j++) {
+  /*for (int j = *i; j <= *n_tokens; j++) {
     if (tokens[j] == NULL) {
       null_token = j;
       break;
     }
-  }
+  }*/
 
   if (pid < 0) {
     perror("Fork Failed");
@@ -48,8 +48,8 @@ int runExternal(char **tokens, int *i, int *n_tokens, char *qbuf) {
     // getppid()); printf("    running commannd: %s and %s",tokens[*i],
     // tokens[*i+1]);
     signal(SIGINT, SIG_DFL);
-    if (execvp(tokens[*i], &tokens[*i]) == -1) {
-      fprintf(stderr, "%s: %s\n", tokens[*i], strerror(errno));
+    if (execvp(cmd->command, cmd->args) == -1) {
+      fprintf(stderr, "%s: %s\n", cmd->args, strerror(errno));
       exit(EXIT_FAILURE);
     }
   }
@@ -68,7 +68,7 @@ int runExternal(char **tokens, int *i, int *n_tokens, char *qbuf) {
     // printf("Child process finished\n");
   }
 
-  *i = null_token;
+  //*i = null_token;
   return 0;
 }
 

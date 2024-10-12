@@ -95,7 +95,7 @@ int runRedirectExternal(Command *cmd) {
     FILE *fp;
     int fd;
     if (strcmp(redirect, ">") == 0) {
-      fd = open(filename, O_WRONLY | O_CREAT, 0644);
+      fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
       if (chmod(filename, 0644) == -1) {
         perror("Error changing file permissions");
         return 1;

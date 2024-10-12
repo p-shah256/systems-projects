@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-int runPipeline(Command *head) {
+int runPipeline(Command *head,char *qbuf) {
 
   int status = 0;
   Command *current = head;
@@ -27,7 +27,7 @@ int runPipeline(Command *head) {
     // check if current.next and current.prev is null
     // that means its the only command and we can run it as a standalone command
     if (current->next == NULL && current->prev == NULL) {
-      status = standaloneCommand(current);
+      status = standaloneCommand(current,qbuf);
     }
     // ls | grep .c | grep command > file.txt
     // ^^^
@@ -133,7 +133,7 @@ int arrayLength(char **args) {
   return i;
 }
 
-int standaloneCommand(Command *cInput) {
+int standaloneCommand(Command *cInput,char *qbuf) {
   int status = 0;
   if (strcmp(cInput->command, "pwd") == 0) {
     status = runpwd();
@@ -171,6 +171,14 @@ int standaloneCommand(Command *cInput) {
     // // exit(atoi(argv[0]));
     // runexit(j, argv);
     runexit(arrayLength(cInput)-1,cInput->args);
+  }
+  else{
+    if(cInput->output || cInput->input){
+      runRedirectExternal(cInput);
+    }
+    else{
+      runExternal(cInput,qbuf);
+    }
   }
   return status;
 }

@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
     int n_tokens = parse(line, max_tokens, tokens, linebuf, sizeof(linebuf));
 
     Command *head = buildCommandList(n_tokens, tokens);
-    runPipeline(head);
+    runPipeline(head,qbuf);
   }
   printf("\n");
 }

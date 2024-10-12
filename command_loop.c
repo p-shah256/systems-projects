@@ -170,7 +170,7 @@ int standaloneCommand(Command *cInput) {
     // // printf("\nexit called with status %s", argv[0]);
     // // exit(atoi(argv[0]));
     // runexit(j, argv);
-    runcd(arrayLength(cInput)-1,cInput->args);
+    runexit(arrayLength(cInput)-1,cInput->args);
   }
   return status;
 }

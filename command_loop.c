@@ -17,8 +17,8 @@ int runPipeline(Command *head) {
 
   int status = 0;
   Command *current = head;
-  int previous_pipe_read = -1;
-  pid_t pid;
+  int previous_pipe_read_end = -1;
+  pid_t child_pid;
   int pipeFD[2];
   pid_t childPids[32];
   int child_count = 0;
@@ -29,99 +29,46 @@ int runPipeline(Command *head) {
     if (current->next == NULL && current->prev == NULL) {
       status = standaloneCommand(current);
     }
+
+    //          ╭─────────────────────────────────────────────────────────╮
+    //          │                RUN PIPE WILL RUN CHILDS                 │
+    //          ╰─────────────────────────────────────────────────────────╯
     // ls | grep .c | grep command > file.txt
     // ^^^
     else if (current->next != NULL && current->prev == NULL) {
       // pipe with fds[1] only
       pipe(pipeFD);
-      // pid = runPipe(-1, pipeFD[1], current);
+      child_pid = runPipe(-1, pipeFD[1], current); // NOTE: -1 = stdout or stdin
+      previous_pipe_read_end = pipeFD[0];
+      close(pipeFD[1]); // NOTE: close it as not required by child
+      childPids[child_count] = child_pid;
+      child_count++;
     }
     // ls | grep .c | grep command > file.txt
     //      ^^^^^^^
     else if (current->next != NULL && current->prev != NULL) {
       // pipe in both fds
+      pipe(pipeFD);
+      child_pid = runPipe(previous_pipe_read_end, pipeFD[1], current);
+      previous_pipe_read_end = pipeFD[0];
+      childPids[child_count] = child_pid;
+      child_count++;
+      close(pipeFD[1]); // NOTE: can close write end not be required by child
     }
     // ls | grep .c | grep command > file.txt
     //                  ^^^^^^^
     else if (current->next == NULL && current->prev != NULL) {
       // pipe with fds[0] only
+      // PIPE NOT REQUIRED HERE
+      child_pid = runPipe(previous_pipe_read_end, -1, current);
+      childPids[child_count] = child_pid;
+      child_count++;
+      close(pipeFD[1]);
+      close(pipeFD[0]); // NOTE: can both ends - no more childs
     }
     current = current->next;
   }
 
-  /*
-for (int i = 0; i < n_tokens; i++) {
-  // Reads exit status of child processes and shares exit code with token
-  // array if user types the special variable
-  if (qbuf[0] != "\0") {
-    for (int i = 0; i < n_tokens; i++) {
-      if (strcmp(tokens[i], "$?") == 0) {
-        tokens[i] = qbuf;
-      }
-    }
-  }
-  char *arg = "\0";
-  char *file = "\0";
-  int isRedirect = 0;
-  int argc;
-
-
-
-  // part 6 redirections, might have to change outside this loop
-  // as this loop will not pick up redirect symbols before any preceeding
-  // command part 3: external commands with NO I/o redirections
-  else {
-    if (isRedirect == 0) {
-
-      for (int y = 0; y < n_tokens; y++) {
-        if (strcmp(tokens[y], ">") == 0) {
-          char *command;
-          char *arguements[y + 1];
-          char *redirectSymbol;
-          for (int i = 0; i < y; i++) {
-            arguements[i] = tokens[i];
-          }
-          command = arguements[0];
-          redirectSymbol = ">";
-          // arg = ">";
-          file = tokens[y + 1];
-          // arguements[y] = file;
-          arguements[y] = NULL;
-          isRedirect = 1;
-          argc = y + 1;
-          runRedirectExternal(command, file, redirectSymbol, arguements,
-                              argc);
-          break;
-        } else if (strcmp(tokens[y], "<") == 0) {
-          char *command;
-          char *arguements[y + 1];
-          char *redirectSymbol;
-          for (int i = 0; i < y; i++) {
-            arguements[i] = tokens[i];
-          }
-          command = arguements[0];
-
-          redirectSymbol = "<";
-          // arg = ">";
-          file = tokens[y + 1];
-          // rguements[y] = file;
-          arguements[y] = NULL;
-          isRedirect = 1;
-          argc = y + 1;
-          // position = i;
-          runRedirectExternal(command, file, redirectSymbol, arguements,
-                              argc);
-          break;
-        }
-      }
-    }
-    if (isRedirect != 1) {
-      runExternal(tokens, &i, &n_tokens, qbuf);
-    }
-    // REDIRECTION COMES here
-  }
-}
-  */
   return status;
 }
 

@@ -31,5 +31,6 @@ void modify_tokens_array(char **tokens, int *n_tokens, int *command_count,
                          int *isPipe);
 int checkAndRunPipes(char **tokens, int *n_tokens, char *qbuf);
 
+int runPipe(int pipeInput, int pipeOutput, Command *head);
 int runPipeline(Command *head);
 int standaloneCommand(Command *cInput);

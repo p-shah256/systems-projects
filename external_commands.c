@@ -226,3 +226,30 @@ int checkAndRunPipes(char **tokens, int *n_tokens, char *qbuf) {
   }
   return isPipe;
 }
+
+int runPipe(int pipeInput, int pipeOutput, Command *head) {
+  int status = 0;
+  pid_t pid = proc_fork();
+  if (pid < 0) {
+    perror("fork failed");
+    exit(EXIT_FAILURE);
+  }
+
+  // CHILD
+  if (pid == 0) {
+    if (pipeInput != -1) {
+      dup2(pipeInput, STDIN_FILENO);
+      close(pipeInput);
+    }
+    if (pipeOutput != -1) {
+      dup2(pipeOutput, STDOUT_FILENO);
+      close(pipeOutput);
+    }
+    if (execvp(head->command, head->args) == -1) {
+      perror("execvp failed");
+      exit(EXIT_FAILURE);
+    }
+  }
+  // PARENT
+  return pid;
+}

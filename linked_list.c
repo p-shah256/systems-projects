@@ -6,7 +6,6 @@
  */
 
 /* <> means don't check the local directory */
-#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,26 +14,13 @@
 #include <unistd.h>
 
 /* "" means check the local directory */
-#include "parser.h"
 #include "shell56_commands.h"
 
 /* you'll need these includes later: */
 #include <fcntl.h>
-#include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
-/* Define the Command structure */
-typedef struct Command {
-  char *command;
-  char **args;
-  char *input;
-  char *output;
-  struct Command *next;
-  struct Command *prev;
-} Command;
-
-/* Function to create a new Command node */
 Command *createCommand() {
   Command *cmd = malloc(sizeof(Command));
   if (!cmd) {
@@ -50,7 +36,6 @@ Command *createCommand() {
   return cmd;
 }
 
-/* Function to add a command to the linked list */
 void addCommand(Command **head, Command **tail, Command *newCmd) {
   if (*head == NULL) {
     *head = newCmd;

@@ -8,7 +8,7 @@ pid_t proc_fork();
 int runExternal(char **tokens, int *i, int *n_tokens, char *qbuf);
 int runRedirectExternal(char **commands, char *file, char *arg, int argc);
 
-void modify_tokens_array(char **tokens, int *n_tokens, int *command_count);
-int checkAndRunPipes(char **tokens, int *n_tokens);
+void modify_tokens_array(char **tokens, int *n_tokens, int *command_count, int* isPipe);
+int checkAndRunPipes(char **tokens, int *n_tokens, char *qbuf);
 
 int runCommands(int n_tokens, char **tokens, char *qbuf);

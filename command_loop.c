@@ -15,9 +15,6 @@
 
 int runCommands(int n_tokens, char **tokens, char *qbuf) {
     for (int i = 0; i < n_tokens; i++) {
-            // DEBUG:
-            // printf(" '%s'", tokens[i]);
-
             if (strcmp(tokens[i],"pwd") == 0) {
                 runpwd();
             }
@@ -100,7 +97,6 @@ int runCommands(int n_tokens, char **tokens, char *qbuf) {
         if(isRedirect != 1){
                     runExternal(tokens, &i, &n_tokens,qbuf);
                 }
-                
             }
         }
     return 0;

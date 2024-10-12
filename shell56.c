@@ -129,8 +129,10 @@ int main(int argc, char **argv)
         // printf("line:");
 
 
-        checkAndRunPipes(tokens, &n_tokens);
-        runCommands(n_tokens, tokens, qbuf);
+        int isPipe = checkAndRunPipes(tokens, &n_tokens, qbuf);
+        if (isPipe == 0) {
+            runCommands(n_tokens, tokens, qbuf);
+        }
 
         printf("\n");
     }

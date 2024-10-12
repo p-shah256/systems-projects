@@ -20,14 +20,17 @@
 
 int runexit(int argc, char **argv) {
   // printf("\n argv: %s", argv[0]);
+    int status = 0;
   if (argc == 0) {
     exit(0);
   } else if (argc == 1) {
     exit(atoi(argv[0]));
   } else {
-    perror("exit error: too many arguements");
+      fprintf(stderr,"exit: too many arguments");
+      status = 1;
+      exit(1);
   }
-  return 0;
+  return status;
 }
 
 int runpwd() {

@@ -179,6 +179,12 @@ int checkAndRunPipes(char **tokens, int *n_tokens, char *qbuf) {
                     close(pipesFD[j][1]);
                 }
 
+                // ERROR HANDLING: exit the fork and go back to the parent
+                if (command_args[command_idx] == NULL || command_args[command_idx][0] == NULL) {
+                    fprintf(stderr, "Error: Missing command at index %d.\n", command_idx);
+                    exit(EXIT_FAILURE);
+                }
+
                 // CHANGE: how we handle non_nnull_commads
                 // Execute the command
                 if (execvp(command_args[command_idx][0], command_args[command_idx]) == -1) {

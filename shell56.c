@@ -15,7 +15,6 @@
 #include <unistd.h>
 
 /* "" means check the local directory */
-#include "linked_list.c"
 #include "parser.h"
 #include "shell56_commands.h"
 

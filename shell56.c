@@ -30,12 +30,12 @@
     }
     chdir(getenv("`"));
 }*/
-int arrayLength(char **args){
-    int i =0;
-    while(args[i] != 0){
-        i++;
-    }
-    return i;
+int arrayLength(char **args) {
+  int i = 0;
+  while (args[i] != 0) {
+    i++;
+  }
+  return i;
 }
 
 int main(int argc, char **argv) {
@@ -83,34 +83,9 @@ int main(int argc, char **argv) {
     /* read a line, tokenize it, and print it out
      */
     int n_tokens = parse(line, max_tokens, tokens, linebuf, sizeof(linebuf));
-    Command *cmdList = buildCommandList(n_tokens, tokens);
-    while(cmdList != NULL){
-        printf("Command: %s\n", cmdList->command);
-        printf("Input: %s\n", cmdList->input ? cmdList->input : "None");
-        printf("Output: %s\n", cmdList->output ? cmdList->output : "None");
-        if(cmdList->args){
-            for(int i=0;cmdList->args[i] != NULL; i++){
-                printf("args: %s ",cmdList->args[i]);
-            }
-        }
-        
-        if(strcmp(cmdList->command,"cd") == 0){
-            runcd(arrayLength(cmdList)-1,cmdList->args);
-        }
-        else if(strcmp(cmdList->command,"pwd") == 0){
-            runpwd();
-        }
-        else if(strcmp(cmdList->command,"exit") == 0){
-            runexit(arrayLength(cmdList)-1,cmdList->args);
-        }
-        else{
-            if(cmdList->output || cmdList->input){
-                runRedirectExternal(cmdList);
-            }
-        }
-        cmdList = cmdList->next;
-    }
-    
+
+    Command *head = buildCommandList(n_tokens, tokens);
+    runPipeline(head);
   }
   printf("\n");
 }

@@ -23,7 +23,7 @@ int runpwd();
 int runexit(int argc, char **argv);
 pid_t proc_fork();
 
-int runExternal(Command *cmd,char *qbuf);
+int runExternal(Command *cmd, char *qbuf);
 
 int runRedirectExternal(Command *cmd);
 
@@ -31,5 +31,6 @@ void modify_tokens_array(char **tokens, int *n_tokens, int *command_count,
                          int *isPipe);
 int checkAndRunPipes(char **tokens, int *n_tokens, char *qbuf);
 
-int runPipeline(Command *head,char *qbuf);
-int standaloneCommand(Command *cInput,char *qbuf);
+int runPipeline(Command *head, char *qbuf);
+int standaloneCommand(Command *cInput, char *qbuf);
+int runPipe(int pipeInput, int pipeOutput, Command *head);

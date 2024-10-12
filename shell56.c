@@ -77,6 +77,7 @@ int main(int argc, char **argv) {
     /* read a line, tokenize it, and print it out
      */
     int n_tokens = parse(line, max_tokens, tokens, linebuf, sizeof(linebuf));
+    Command *cmdList = buildCommandList(n_tokens, tokens);
   }
   printf("\n");
 }

@@ -31,7 +31,7 @@ int runExternal(char** tokens, int *i, int *n_tokens, char *qbuf) {
     pid = proc_fork();
 
     // CHANGE: look for a null token and set I to that instead of setting it to last token
-    for (int j = *i; j < *n_tokens; j++) {
+    for (int j = *i; j <= *n_tokens; j++) {
         if (tokens[j] == NULL) {
             null_token = j;
             break;

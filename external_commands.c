@@ -107,13 +107,24 @@ int checkAndRunPipes(char **tokens, int *n_tokens, char *qbuf) {
         int command_total = pipe_count + 1;
         int pipesFD[pipe_count][2];
         pid_t pids_list[command_total];
-        /*
-         * work in pairs.
-         * 1. create pipes = pipes_count
-         * 2. fork = command count
-         * 3. change fds for 1st fork to pipefd[1] --- WRITE;
-         * 4. change fd for 2nd fork to pipefd[0] --- READ;
-         * */
+
+        // create a command array
+        // why:: come back to this
+        char **command_args[command_total];
+        int position = 0;
+        for (int i = 0; i < command_total; i++) {
+            // skip over NULLs to find the start of the command
+            while (tokens[position] == NULL && position < *n_tokens) {
+                position++;
+            }
+            // splice a new array from that position
+            command_args[i] = &tokens[position];
+            // Move position forward to the next NULL
+            while (tokens[position] != NULL && position < *n_tokens) {
+                position++;
+            }
+            position++;
+        }
 
         //  ├┤ CREATE PIPES ├──────────────────────────────────────────────────┤
         for (int i=0; i<pipe_count; i++) {
@@ -124,51 +135,53 @@ int checkAndRunPipes(char **tokens, int *n_tokens, char *qbuf) {
         }
 
         //  ├┤ FORK ├──────────────────────────────────────────────────────────┤
-        for (int current_command_count=0; current_command_count<command_total; current_command_count++) {
+        for (int command_idx=0; command_idx<command_total; command_idx++) {
             pid_t pid = proc_fork();
             if (pid < 0) {
                 perror("fork failed");
                 exit(EXIT_FAILURE);
             }
 
-            // CHILLD
+            //          ┌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┐
+            //          ╎                     CHILLD PROCESS                      ╎
+            //          └╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┘
             if (pid==0) {
-                // IF NOT last command 
+                // IF last command 
                 // tokens = ["ls", | , "grep", ".c", | , "cat"]
                 //                                       ^^^^^
-                if (current_command_count != command_total - 1) {
+                if (command_idx == command_total - 1) {
                     // printf("\nFROM CHILD:: process to Redirect STDOUT_FILENO: %s\n", tokens[current_command_count]);
-                    dup2(pipesFD[current_command_count][1], STDOUT_FILENO);  
+                    dup2(pipesFD[command_idx-1][0], STDIN_FILENO);
                     // Redirect stdout to write-end of pipe
                 }
-               
-                // IF NOT first command
+
+                // IF first command
                 // tokens = ["ls", | , "grep", ".c", | , "cat"]
                 //           ^^^^
-                if (current_command_count != 0) {
+                else if (command_idx == 0) {
                     // printf("\nFROM CHILD:: process to redirect STDIN_FILENO: %s\n", tokens[current_command_count]);
-                    dup2(pipesFD[current_command_count-1][0], STDIN_FILENO); 
+                    dup2(pipesFD[command_idx][1], STDOUT_FILENO);
                     // Redirect stdin to read-end of pipe
                 }
 
+                // IF NOT first command
+                // tokens = ["ls", | , "grep", ".c", | , "cat"]
+                //                      ^^^^^^^^^^
+                else {
+                    dup2(pipesFD[command_idx-1][0], STDIN_FILENO);
+                    dup2(pipesFD[command_idx][1], STDOUT_FILENO);
+                }
+
                 // Close all pipe file descriptors in the child
-                // LEARN why::
+                // why:: because they have been redirected and now we don't need these FDs in CHILD's PCB
                 for (int j = 0; j < pipe_count; j++) {
                     close(pipesFD[j][0]);
                     close(pipesFD[j][1]);
                 }
 
-
-                // everything from command_count = &tokens[command_count];
-                // tokens = ["ls", null, "grep", ".c", "null", "cat"]
-                
-                // printf("\nFROM CHILD: pid %d\n", getpid());
-                int non_null_command = current_command_count;
-                while (tokens[non_null_command] == NULL) {
-                    non_null_command++;
-                }
-                // printf("\nFROM CHILD:: calling execvp :: %s\n", tokens[non_null_command]);
-                if (execvp(tokens[non_null_command], &tokens[non_null_command]) == -1) {
+                // CHANGE: how we handle non_nnull_commads
+                // Execute the command
+                if (execvp(command_args[command_idx][0], command_args[command_idx]) == -1) {
                     perror("execvp failed");
                     exit(EXIT_FAILURE);
                 }
@@ -177,14 +190,14 @@ int checkAndRunPipes(char **tokens, int *n_tokens, char *qbuf) {
             // PARENT
             else {
                 // printf("\nFROM PARENT: adding pid to the list %d\n", pid);
-                pids_list[current_command_count] = pid;
+                pids_list[command_idx] = pid;
                 // LEARN why::
                 // Close the parent's copy of the pipe ends after forking
-                if (current_command_count != 0) {
-                    close(pipesFD[current_command_count-1][0]); // close read end of previous pipe
+                if (command_idx != command_total - 1) {
+                    close(pipesFD[command_idx][1]);
                 }
-                if (current_command_count != command_total - 1) {
-                    close(pipesFD[current_command_count][1]); // close write end of the current pipe
+                if (command_idx != 0) {
+                    close(pipesFD[command_idx - 1][0]);
                 }
             }
         }

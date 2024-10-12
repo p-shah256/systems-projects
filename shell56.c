@@ -15,6 +15,7 @@
 #include <unistd.h>
 
 /* "" means check the local directory */
+#include "linked_list.c"
 #include "parser.h"
 #include "shell56_commands.h"
 
@@ -30,43 +31,6 @@
     }
     chdir(getenv("`"));
 }*/
-/* Define the Command structure */
-typedef struct Command {
-  char *command;        // Command name
-  char **args;          // Arguments array
-  char *input;          // Input redirection filename
-  char *output;         // Output redirection filename
-  struct Command *next; // Next command (for piping)
-  struct Command *prev; // Previous command (for piping)
-} Command;
-
-/* Function to create a new Command node */
-Command *createCommand() {
-  Command *cmd = malloc(sizeof(Command));
-  if (!cmd) {
-    perror("malloc");
-    exit(EXIT_FAILURE);
-  }
-  cmd->command = NULL;
-  cmd->args = NULL;
-  cmd->input = NULL;
-  cmd->output = NULL;
-  cmd->next = NULL;
-  cmd->prev = NULL;
-  return cmd;
-}
-
-/* Function to add a command to the linked list */
-void addCommand(Command **head, Command **tail, Command *newCmd) {
-  if (*head == NULL) {
-    *head = newCmd;
-    *tail = newCmd;
-  } else {
-    (*tail)->next = newCmd;
-    newCmd->prev = *tail;
-    *tail = newCmd;
-  }
-}
 
 int main(int argc, char **argv) {
   bool interactive = isatty(STDIN_FILENO); /* see: man 3 isatty */

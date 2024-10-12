@@ -30,13 +30,7 @@
     }
     chdir(getenv("`"));
 }*/
-int arrayLength(char **args) {
-  int i = 0;
-  while (args[i] != 0) {
-    i++;
-  }
-  return i;
-}
+
 
 int main(int argc, char **argv) {
   bool interactive = isatty(STDIN_FILENO); /* see: man 3 isatty */

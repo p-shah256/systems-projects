@@ -125,6 +125,14 @@ for (int i = 0; i < n_tokens; i++) {
   return status;
 }
 
+int arrayLength(char **args) {
+  int i = 0;
+  while (args[i] != 0) {
+    i++;
+  }
+  return i;
+}
+
 int standaloneCommand(Command *cInput) {
   int status = 0;
   if (strcmp(cInput->command, "pwd") == 0) {
@@ -146,6 +154,7 @@ int standaloneCommand(Command *cInput) {
     /*// printf("\n cd called, token number: %d", i);*/
     /*runcd(j, argv);*/
     /*i = y;*/
+    runcd(arrayLength(cInput)-1,cInput->args);
   }
 
   else if (strcmp(cInput->command, "exit") == 0) {
@@ -161,6 +170,7 @@ int standaloneCommand(Command *cInput) {
     // // printf("\nexit called with status %s", argv[0]);
     // // exit(atoi(argv[0]));
     // runexit(j, argv);
+    runcd(arrayLength(cInput)-1,cInput->args);
   }
   return status;
 }

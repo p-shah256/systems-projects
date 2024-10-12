@@ -48,8 +48,8 @@ int runExternal(char** tokens, int *i, int *n_tokens, char *qbuf) {
         // printf("    running commannd: %s and %s",tokens[*i], tokens[*i+1]);
         signal(SIGINT, SIG_DFL);
         if (execvp(tokens[*i], &tokens[*i]) == -1) {
-        fprintf(stderr, "%s: %s\n", tokens[*i], strerror(errno));
-        exit(EXIT_FAILURE);
+            fprintf(stderr, "%s: %s\n", tokens[*i], strerror(errno));
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -152,6 +152,7 @@ int checkAndRunPipes(char **tokens, int *n_tokens, char *qbuf) {
                 }
 
                 // Close all pipe file descriptors in the child
+                // LEARN why::
                 for (int j = 0; j < pipe_count; j++) {
                     close(pipesFD[j][0]);
                     close(pipesFD[j][1]);
@@ -160,6 +161,8 @@ int checkAndRunPipes(char **tokens, int *n_tokens, char *qbuf) {
 
                 // everything from command_count = &tokens[command_count];
                 // tokens = ["ls", null, "grep", ".c", "null", "cat"]
+                
+                // printf("\nFROM CHILD: pid %d\n", getpid());
                 int non_null_command = current_command_count;
                 while (tokens[non_null_command] == NULL) {
                     non_null_command++;
@@ -173,17 +176,26 @@ int checkAndRunPipes(char **tokens, int *n_tokens, char *qbuf) {
 
             // PARENT
             else {
-                // printf("\nFROM PARENT: adding pid to the list\n");
-                pids_list[current_command_count] = getpid();
+                // printf("\nFROM PARENT: adding pid to the list %d\n", pid);
+                pids_list[current_command_count] = pid;
+                // LEARN why::
+                // Close the parent's copy of the pipe ends after forking
+                if (current_command_count != 0) {
+                    close(pipesFD[current_command_count-1][0]); // close read end of previous pipe
+                }
+                if (current_command_count != command_total - 1) {
+                    close(pipesFD[current_command_count][1]); // close write end of the current pipe
+                }
             }
         }
 
+        int status;
         // Wait for all child processes to finish
         for (int i = 0; i < command_total; i++) {
-            int status;
+            // printf("Waiting for process %d\n", pids_list[i]);
             waitpid(pids_list[i], &status, 0);
+            // printf("Process %d finished\n", pids_list[i]);
         }
-        // printf("waiting at pid");
     }
     return isPipe;
 }

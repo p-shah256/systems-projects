@@ -69,6 +69,10 @@ int runPipeline(Command *head, char *qbuf) {
     current = current->next;
   }
 
+  // Wait for all child processes to finish
+  for (int i = 0; i < child_count; i++) {
+    waitpid(childPids[i], &status, 0);
+  }
   return status;
 }
 

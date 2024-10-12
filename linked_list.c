@@ -21,20 +21,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-<<<<<<< HEAD
-/* Define the Command structure */
-/*typedef struct Command {
-  char *command;
-  char **args;
-  char *input;
-  char *output;
-  struct Command *next;
-  struct Command *prev;
-} Command;*/
-
-/* Function to create a new Command node */
-=======
->>>>>>> ea07cb480b1d3be3c8c87b6c60a63e663d750367
 Command *createCommand() {
   Command *cmd = malloc(sizeof(Command));
   if (!cmd) {

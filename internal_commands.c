@@ -21,7 +21,7 @@ int runexit(int argc, char **argv) {
   if (argc == 0) {
     exit(0);
   } else if (argc == 1) {
-    exit(atoi(argv[0]));
+    exit(atoi(argv[argc]));
   } else {
       fprintf(stderr,"exit: too many arguments");
       status = 1;
@@ -42,6 +42,7 @@ int runpwd() {
 }
 
 int runcd(int argc, char **argv) {
+  printf("Inside cd, moving to %s",argv[argc]);
   int status;
   char *location;
   if (argc == 1) {
@@ -50,7 +51,7 @@ int runcd(int argc, char **argv) {
     fprintf(stderr, "cd: wrong number of arguments\n");
     return 1;
   } else {
-    location = argv[1];
+    location = argv[argc];
   }
 
   // printf("location: %s\n", location);

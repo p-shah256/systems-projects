@@ -80,7 +80,6 @@ int runCommands(int n_tokens, char **tokens, char *qbuf) {
               arguements[i] = tokens[i];
             }
             command = arguements[0];
-
             redirectSymbol = ">";
             // arg = ">";
             file = tokens[y + 1];

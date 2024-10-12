@@ -31,6 +31,13 @@
     }
     chdir(getenv("`"));
 }*/
+int arrayLength(char **args){
+    int i =0;
+    while(args[i] != 0){
+        i++;
+    }
+    return i;
+}
 
 int main(int argc, char **argv) {
   bool interactive = isatty(STDIN_FILENO); /* see: man 3 isatty */
@@ -78,6 +85,28 @@ int main(int argc, char **argv) {
      */
     int n_tokens = parse(line, max_tokens, tokens, linebuf, sizeof(linebuf));
     Command *cmdList = buildCommandList(n_tokens, tokens);
+    while(cmdList != NULL){
+        /*printf("Command: %s\n", cmdList->command);
+        printf("Input: %s\n", cmdList->input ? cmdList->input : "None");
+        printf("Output: %s\n", cmdList->output ? cmdList->output : "None");
+        if(cmdList->args){
+            for(int i=0;cmdList->args[i] != NULL; i++){
+                printf("args: %s ",cmdList->args[i]);
+            }
+        }*/
+        
+        if(strcmp(cmdList->command,"cd") == 0){
+            runcd(arrayLength(cmdList)-1,cmdList->args);
+        }
+        else if(strcmp(cmdList->command,"pwd") == 0){
+            runpwd();
+        }
+        else if(strcmp(cmdList->command,"exit") == 0){
+            runexit(arrayLength(cmdList)-1,cmdList->args);
+        }
+        cmdList = cmdList->next;
+    }
+    
   }
   printf("\n");
 }

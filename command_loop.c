@@ -34,7 +34,10 @@ int runCommands(int n_tokens, char **tokens, char *qbuf) {
     }
 
     else if (strcmp(tokens[i], "cd") == 0) {
-      char *argv[2];
+      // sanitize cd
+      // "ls | grep grade | cd 1 2 > text.txt"
+      //                   ^^^ = i
+      char *argv[5];
       int j = 0;
       int y = i;
       while (tokens[y] != NULL) {
@@ -44,7 +47,7 @@ int runCommands(int n_tokens, char **tokens, char *qbuf) {
       }
       // printf("\n cd called, token number: %d", i);
       runcd(j, argv);
-      i += 1;
+      i = y;
     }
 
     else if (strcmp(tokens[i], "exit") == 0) {

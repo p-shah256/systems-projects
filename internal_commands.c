@@ -6,9 +6,6 @@
 #include <string.h>
 #include <unistd.h>
 
-/* "" means check the local directory */
-#include "parser.h"
-
 /* you'll need these includes later: */
 #include <fcntl.h>
 #include <signal.h>
@@ -41,25 +38,23 @@ int runpwd() {
   return 0;
 }
 
-// TODO: should not print
-// $ cd gradescope
-// gradescope: No such file or directory
 int runcd(int argc, char **argv) {
   int status;
+  char *location;
   if (argc == 1) {
-    printf("\n cd called without any args");
-    chdir(getenv("~"));
+    location = getenv("HOME");
   } else if (argc > 2) {
     fprintf(stderr, "cd: wrong number of arguments\n");
     return 1;
   } else {
-    // printf("\n cd called with an args");
-    status = chdir(argv[1]);
-    if (status != 0) {
-      fprintf("cd: %s\n", strerror(status));
-      return 1;
-    }
-    printf("changed directory to: %s\n", argv[1]);
+    location = argv[1];
+  }
+
+  // printf("location: %s\n", location);
+  status = chdir(location);
+  if (status != 0) {
+    fprintf(stderr, "cd: %s\n", strerror(errno));
+    return 1;
   }
   return 0;
 }

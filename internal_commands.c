@@ -48,13 +48,7 @@ int runcd(int argc, char **argv) {
   int status;
   if (argc == 1) {
     printf("\n cd called without any args");
-    chdir(getenv("~")); // error when returning a status from chdir, recieve
-                        // access error on abort
-    // otherwise without status, seems to work fine
-    /*if(status != 0){
-        fprintf("cd: %s\n", strerror(status));
-        return 1;
-    }*/
+    chdir(getenv("~"));
   } else if (argc > 2) {
     fprintf(stderr, "cd: wrong number of arguments\n");
     return 1;
@@ -65,6 +59,7 @@ int runcd(int argc, char **argv) {
       fprintf("cd: %s\n", strerror(status));
       return 1;
     }
+    printf("changed directory to: %s\n", argv[1]);
   }
   return 0;
 }

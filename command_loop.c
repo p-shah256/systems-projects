@@ -44,6 +44,7 @@ int runCommands(int n_tokens, char **tokens, char *qbuf) {
       }
       // printf("\n cd called, token number: %d", i);
       runcd(j, argv);
+      i += 1;
     }
 
     else if (strcmp(tokens[i], "exit") == 0) {
@@ -59,8 +60,9 @@ int runCommands(int n_tokens, char **tokens, char *qbuf) {
       // printf("\nexit called with status %s", argv[0]);
       // exit(atoi(argv[0]));
       runexit(j, argv);
+    }
 
-    } // part 6 redirections, might have to change outside this loop
+    // part 6 redirections, might have to change outside this loop
     // as this loop will not pick up redirect symbols before any preceeding
     // command part 3: external commands with NO I/o redirections
     else {

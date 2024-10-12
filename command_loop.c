@@ -19,7 +19,7 @@ int runCommands(int n_tokens, char **tokens, char *qbuf) {
     // array if user types the special variable
     if (qbuf[0] != "\0") {
       for (int i = 0; i < n_tokens; i++) {
-        if (strcmp(tokens[i], "$!") == 0) {
+        if (strcmp(tokens[i], "$?") == 0) {
           tokens[i] = qbuf;
         }
       }

@@ -86,14 +86,14 @@ int main(int argc, char **argv) {
     int n_tokens = parse(line, max_tokens, tokens, linebuf, sizeof(linebuf));
     Command *cmdList = buildCommandList(n_tokens, tokens);
     while(cmdList != NULL){
-        /*printf("Command: %s\n", cmdList->command);
+        printf("Command: %s\n", cmdList->command);
         printf("Input: %s\n", cmdList->input ? cmdList->input : "None");
         printf("Output: %s\n", cmdList->output ? cmdList->output : "None");
         if(cmdList->args){
             for(int i=0;cmdList->args[i] != NULL; i++){
                 printf("args: %s ",cmdList->args[i]);
             }
-        }*/
+        }
         
         if(strcmp(cmdList->command,"cd") == 0){
             runcd(arrayLength(cmdList)-1,cmdList->args);
@@ -103,6 +103,11 @@ int main(int argc, char **argv) {
         }
         else if(strcmp(cmdList->command,"exit") == 0){
             runexit(arrayLength(cmdList)-1,cmdList->args);
+        }
+        else{
+            if(cmdList->output || cmdList->input){
+                runRedirectExternal(cmdList);
+            }
         }
         cmdList = cmdList->next;
     }

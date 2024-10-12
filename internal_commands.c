@@ -70,29 +70,23 @@ pid_t proc_fork() { return fork(); }
 
 // STEP 6 REDIRECT
 
-int runRedirectExternal(char *command, char *filename, char *redirect,
-                        char **argv, int argc) {
-  // printf("arg is : %s\n",arg);
-  // printf("file is %s",file);
-  // printf("number of commands are %d\n",argc);
-  // instead of syscall, using lower level version of fopen
-  //  need to use open, must handle commands like grep, tr, cat, etc
-  //  cmd name, arguements/pattern, file name is that is needed
-  //  parameters for program should be cmd name, file name, arguement, cmd
-  //  arguement ... ellipsis for
-  // additional commands
-  // char syscall[100];
-  // char results[100] = {0};
-
-  /*for(int i=0;i< argc;i++){
-      printf("%s\n",argv[i]);
-  }*/
-  // char ** args;
-  char **args = argv;
+int runRedirectExternal(Command *cmd) {
+  char * command = cmd->command;
+  char *filename;
+  char *redirect;
+  if(cmd->input){
+    filename = cmd->input;
+    redirect = "<";
+  }
+  else{
+    filename = cmd->output;
+    redirect = ">";
+  }
   pid_t pids[16];
   int status;
   pid_t pid;
   pid = proc_fork();
+  printf("executing redirect command %s",command);
   if (pid < 0) {
     perror("Fork Failed");
   }
@@ -146,7 +140,7 @@ int runRedirectExternal(char *command, char *filename, char *redirect,
     // printf("Child process: PID = %d, Parent PID = %d\n", getpid(),
     // getppid());
     signal(SIGINT, SIG_DFL);
-    if (execvp(command, argv) == -1) {
+    if (execvp(command, cmd->args) == -1) {
       perror("Error executing command");
       return 1;
     }

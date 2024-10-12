@@ -1,13 +1,15 @@
-Makefile
-README.md
-command_loop.c
-external_commands.c
-file.txt
-gradescope
-internal_commands.c
-parser.c
-parser.h
-shell56
-shell56.c
-shell56.dSYM
-shell56_commands.h
+total 240
+-rw-r--r--  1 charlescarlson  staff    259 Oct 12 15:08 Makefile
+-rw-r--r--  1 charlescarlson  staff  17667 Oct  1 09:42 README.md
+-rw-r--r--  1 charlescarlson  staff   3401 Oct 12 18:26 command_loop.c
+-rw-r--r--  1 charlescarlson  staff   8293 Oct 12 15:08 external_commands.c
+-rw-r--r--  1 charlescarlson  staff    162 Oct 12 15:28 file.txt
+drwxr-xr-x  4 charlescarlson  staff    128 Oct 12 15:08 gradescope
+-rw-r--r--  1 charlescarlson  staff   3902 Oct 12 18:41 internal_commands.c
+-rw-r--r--  1 charlescarlson  staff   3137 Oct 12 18:33 linked_list.c
+-rw-r--r--  1 charlescarlson  staff   3110 Oct  1 09:42 parser.c
+-rw-r--r--  1 charlescarlson  staff    453 Oct  1 09:42 parser.h
+-rwxr-xr-x  1 charlescarlson  staff  50840 Oct 12 18:44 shell56
+-rw-r--r--  1 charlescarlson  staff   3040 Oct 12 18:44 shell56.c
+drwxr-xr-x  3 charlescarlson  staff     96 Oct  1 09:46 shell56.dSYM
+-rw-r--r--  1 charlescarlson  staff    866 Oct 12 18:40 shell56_commands.h

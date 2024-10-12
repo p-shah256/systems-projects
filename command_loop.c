@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-int runCommands(int n_tokens, char **tokens, char *qbuf) {
+/*int runCommands(int n_tokens, char **tokens, char *qbuf) {
   for (int i = 0; i < n_tokens; i++) {
     // Reads exit status of child processes and shares exit code with token
     // array if user types the special variable
@@ -121,3 +121,4 @@ int runCommands(int n_tokens, char **tokens, char *qbuf) {
   }
   return 0;
 }
+*/

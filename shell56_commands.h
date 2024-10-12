@@ -1,5 +1,8 @@
 #include <sys/types.h>
 
+#ifndef SHELL56_COMMANDS_H
+#define SHELL56_COMMANDS_H
+
 typedef struct Command {
   char *command;
   char **args;
@@ -8,6 +11,7 @@ typedef struct Command {
   struct Command *next;
   struct Command *prev;
 } Command;
+#endif // SHELL56_COMMANDS_H
 
 Command *createCommand();
 void addCommand(Command **head, Command **tail, Command *newCmd);
@@ -21,8 +25,7 @@ pid_t proc_fork();
 
 int runExternal(char **tokens, int *i, int *n_tokens, char *qbuf);
 
-int runRedirectExternal(char *command, char *file, char *redirectSymbol,
-                        char **arguements, int argc);
+int runRedirectExternal(Command *cmd);
 
 void modify_tokens_array(char **tokens, int *n_tokens, int *command_count,
                          int *isPipe);

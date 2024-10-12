@@ -25,14 +25,14 @@
 #include <sys/wait.h>
 
 /* Define the Command structure */
-typedef struct Command {
+/*typedef struct Command {
   char *command;
   char **args;
   char *input;
   char *output;
   struct Command *next;
   struct Command *prev;
-} Command;
+} Command;*/
 
 /* Function to create a new Command node */
 Command *createCommand() {
@@ -75,9 +75,6 @@ Command *buildCommandList(int n_tokens, char **tokens) {
            strcmp(tokens[i], "<") != 0 && strcmp(tokens[i], ">") != 0) {
       i++;
       //printf("commands: %s",tokens[i]);
-    }
-    for(int i=0;i<n_tokens;i++){
-      printf("commands %s\n",tokens[i]);
     }
     int arg_count = i - arg_start;
     current->args = malloc((arg_count + 1) * sizeof(char *));

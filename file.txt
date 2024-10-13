@@ -1,14 +1,4 @@
-Makefile
-README.md
 command_loop.c
 external_commands.c
-file.txt
-gradescope
 internal_commands.c
-linked_list.c
-parser.c
-parser.h
-shell56
-shell56.c
-shell56.dSYM
 shell56_commands.h

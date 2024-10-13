@@ -17,15 +17,15 @@
 
 int runexit(int argc, char **argv) {
   // printf("\n argv: %s", argv[0]);
-    int status = 0;
+  int status = 0;
   if (argc == 0) {
     exit(0);
   } else if (argc == 1) {
     exit(atoi(argv[argc]));
   } else {
-      fprintf(stderr,"exit: too many arguments");
-      status = 1;
-      exit(1);
+    fprintf(stderr, "exit: too many arguments");
+    status = 1;
+    exit(1);
   }
   return status;
 }
@@ -42,7 +42,7 @@ int runpwd() {
 }
 
 int runcd(int argc, char **argv) {
-  printf("Inside cd, moving to %s",argv[argc]);
+  // printf("Inside cd, moving to %s",argv[argc]);
   int status;
   char *location;
   if (argc == 1) {
@@ -71,14 +71,13 @@ pid_t proc_fork() { return fork(); }
 // STEP 6 REDIRECT
 
 int runRedirectExternal(Command *cmd) {
-  char * command = cmd->command;
+  char *command = cmd->command;
   char *filename;
   char *redirect;
-  if(cmd->input){
+  if (cmd->input) {
     filename = cmd->input;
     redirect = "<";
-  }
-  else{
+  } else {
     filename = cmd->output;
     redirect = ">";
   }
@@ -86,7 +85,7 @@ int runRedirectExternal(Command *cmd) {
   int status;
   pid_t pid;
   pid = proc_fork();
-  printf("executing redirect command %s",command);
+  // printf("executing redirect command %s", command);
   if (pid < 0) {
     perror("Fork Failed");
   }

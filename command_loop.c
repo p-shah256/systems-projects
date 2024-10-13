@@ -91,36 +91,10 @@ int standaloneCommand(Command *cInput, char *qbuf) {
   }
 
   else if (strcmp(cInput->command, "cd") == 0) {
-    /*// sanitize cd*/
-    /*// "ls | grep grade | cd 1 2 > text.txt"*/
-    /*//                   ^^^ = i*/
-    /*char *argv[5];*/
-    /*int j = 0;*/
-    /*int y = i;*/
-    /*while (tokens[y] != NULL) {*/
-    /*  argv[j] = tokens[y];*/
-    /*  y++;*/
-    /*  j++;*/
-    /*}*/
-    /*// printf("\n cd called, token number: %d", i);*/
-    /*runcd(j, argv);*/
-    /*i = y;*/
     runcd(arrayLength(cInput) - 1, cInput->args);
   }
 
   else if (strcmp(cInput->command, "exit") == 0) {
-    // printf("\n exit called, token number: %d", i);
-    // char *argv[1];
-    // int j = 0;
-    // int y = i + 1;
-    // while (tokens[y] != NULL) {
-    //   argv[j] = tokens[y];
-    //   y++;
-    //   j++;
-    // }
-    // // printf("\nexit called with status %s", argv[0]);
-    // // exit(atoi(argv[0]));
-    // runexit(j, argv);
     runexit(arrayLength(cInput) - 1, cInput->args);
   } else {
     if (cInput->output || cInput->input) {

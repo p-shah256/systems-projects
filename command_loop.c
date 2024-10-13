@@ -111,7 +111,7 @@ int standaloneCommand(Command *cInput, char *qbuf) {
   }
 
   else if (strcmp(cInput->command, "exit") == 0) {
-    runexit(arrayLength(cInput) - 1, cInput->args);
+    runexit(cInput);
   } else {
     if (cInput->output || cInput->input) {
       runRedirectExternal(cInput);

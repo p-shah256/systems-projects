@@ -20,7 +20,7 @@ void printCommandList(Command *head);
 
 int runcd(Command *cd);
 int runpwd();
-int runexit(int argc, char **argv);
+int runexit(Command *cmd);
 pid_t proc_fork();
 
 int runExternal(Command *cmd, char *qbuf);

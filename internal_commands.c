@@ -15,15 +15,21 @@
 #include "shell56_commands.h"
 #include "sys/stat.h"
 
-int runexit(int argc, char **argv) {
+int runexit(Command *cmd) {
   // printf("\n argv: %s", argv[0]);
   int status = 0;
+    int argc = 0;
+  if (cmd->args) {
+        for (int i = 1; cmd->args[i] != NULL; i++) {
+            argc++;
+        }
+    }
   if (argc == 0) {
     exit(0);
   } else if (argc == 1) {
-    exit(atoi(argv[argc]));
+    exit(atoi(cmd->args[argc]));
   } else {
-    fprintf(stderr, "exit: too many arguments");
+    fprintf(stderr, "exit: too many arguments\n");
     status = 1;
     exit(1);
   }

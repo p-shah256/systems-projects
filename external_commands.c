@@ -267,7 +267,13 @@ int runPipe(int pipeInput, int pipeOutput, Command *head) {
     // SO if above it will redirect else it will simply execute removing the
     // need for runexternal command!
     // NOTE: another impact of design
-    if (execvp(head->command, head->args) == -1) {
+    /*if(strcmp(head->command,"false") == 0){
+      exit(1);
+    }
+    else if(strcmp(head->command,"true") == 0){
+      exit(0);
+    }
+    else*/ if (execvp(head->command, head->args) == -1) {
       perror("execvp failed");
       exit(EXIT_FAILURE);
     }

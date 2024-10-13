@@ -62,6 +62,7 @@ int runcd(Command *cd) {
     location = getenv("HOME");
   } else if (argc >= 2) {
     fprintf(stderr, "cd: wrong number of arguments\n");
+    exit(1);
     return 1;
   } else {
     location = cd->args[argc];
@@ -71,6 +72,7 @@ int runcd(Command *cd) {
   status = chdir(location);
   if (status != 0) {
     fprintf(stderr, "cd: %s\n", strerror(errno));
+    exit(1);
     return 1;
   }
   return 0;

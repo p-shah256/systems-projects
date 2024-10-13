@@ -75,6 +75,16 @@ int runPipeline(Command *head, char *qbuf) {
   // Wait for all child processes to finish
   for (int i = 0; i < child_count; i++) {
     waitpid(childPids[i], &status, 0);
+    if(WIFEXITED(status) && WEXITSTATUS(status) == 0){
+            //printf("Process %d finished \n",childPids[i]);
+            //printf("status is %s",WEXITSTATUS(status));
+            sprintf(qbuf, "%d", WEXITSTATUS(status));
+        }
+        else{
+           // printf("Process %d failed \n",childPids[i]);
+            //printf("status is %s",WEXITSTATUS(status));
+            sprintf(qbuf, "%d", WEXITSTATUS(status));
+        }
     exit_code = status;
   }
   return exit_code;

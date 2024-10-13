@@ -1,17 +1,1 @@
-
-total 2500
--rw-r--r-- 1 shah256 users    3364 Oct 12 20:33 command_loop.c
--rw-r--r-- 1 shah256 users   10052 Oct 12 20:26 external_commands.c
--rw-r--r-- 1 shah256 users       0 Oct 12 20:33 file.txt
-drwxr-xr-x 2 shah256 users    4096 Oct 12 14:21 gradescope
--rw-r--r-- 1 shah256 users    3912 Oct 12 20:26 internal_commands.c
--rw-r--r-- 1 shah256 users    2618 Oct 12 19:57 linked_list.c
--rw-r--r-- 1 shah256 users     273 Oct 12 19:22 Makefile
--rw-r--r-- 1 shah256 users    3110 Oct  4 19:42 parser.c
--rw-r--r-- 1 shah256 users     453 Oct  4 19:42 parser.h
--rw-r--r-- 1 shah256 users 2340237 Oct  5 17:12 parser.h.gch
--rw-r--r-- 1 shah256 users   17667 Oct  4 19:42 README.md
--rwxr-xr-x 1 shah256 users  140312 Oct 12 20:33 shell56
--rw-r--r-- 1 shah256 users    2036 Oct 12 19:50 shell56.c
--rw-r--r-- 1 shah256 users     965 Oct 12 19:53 shell56_commands.h
-drwxr-xr-x 3 shah256 users    4096 Oct  4 19:42 shell56.dSYM
+Hello World

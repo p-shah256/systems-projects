@@ -101,7 +101,9 @@ int standaloneCommand(Command *cInput, char *qbuf) {
     /*// printf("\n cd called, token number: %d", i);*/
     /*runcd(j, argv);*/
     /*i = y;*/
-    runcd(arrayLength(cInput) - 1, cInput->args);
+    //printf("# of cd arguements %s",arrayLength(cInput));
+
+    runcd(cInput);
   }
 
   else if (strcmp(cInput->command, "exit") == 0) {

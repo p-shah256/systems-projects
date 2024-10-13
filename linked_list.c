@@ -70,10 +70,10 @@ Command *buildCommandList(int n_tokens, char **tokens) {
     if (arg_count > 0) {
       current->command = tokens[arg_start];
     }
-    for(int i=0;i<arg_count;i++){
+    /*for(int i=0;i<arg_count;i++){
       printf("args %d %s \n",i,current->args[i]);
-    }
-    printf("command: %s\n",current->command);
+    }*/
+    //printf("command: %s\n",current->command);
 
     // Parse redirections or pipe
     while (i < n_tokens &&

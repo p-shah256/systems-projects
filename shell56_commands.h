@@ -18,7 +18,7 @@ void addCommand(Command **head, Command **tail, Command *newCmd);
 Command *buildCommandList(int n_tokens, char **tokens);
 void printCommandList(Command *head);
 
-int runcd(int argc, char **argv);
+int runcd(Command *cd);
 int runpwd();
 int runexit(int argc, char **argv);
 pid_t proc_fork();

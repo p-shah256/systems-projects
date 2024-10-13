@@ -16,7 +16,7 @@
 #include "sys/stat.h"
 
 int runexit(int argc, char **argv) {
-  // printf("\n argv: %s", argv[0]);
+  //printf("\n argv: %s", argv[argc]);
     int status = 0;
   if (argc == 0) {
     exit(0);
@@ -41,20 +41,27 @@ int runpwd() {
   return 0;
 }
 
-int runcd(int argc, char **argv) {
-  printf("Inside cd, moving to %s",argv[argc]);
+int runcd(Command *cd) {
+  //printf("Inside cd, moving to %s",argv[argc]);
   int status;
   char *location;
-  if (argc == 1) {
+  int argc = 0;
+  if (cd->args) {
+        for (int i = 1; cd->args[i] != NULL; i++) {
+            argc++;
+        }
+    }
+   // printf("# of args %d",argc);
+  if (argc == 0) {
     location = getenv("HOME");
-  } else if (argc > 2) {
+  } else if (argc >= 2) {
     fprintf(stderr, "cd: wrong number of arguments\n");
     return 1;
   } else {
-    location = argv[argc];
+    location = cd->args[argc];
   }
 
-  // printf("location: %s\n", location);
+   printf("location: %s\n", location);
   status = chdir(location);
   if (status != 0) {
     fprintf(stderr, "cd: %s\n", strerror(errno));

@@ -19,24 +19,13 @@
 //          │                  STEP 3: run EXTERNAL                   │
 //          ╰─────────────────────────────────────────────────────────╯
 int runExternal(Command *cmd, char *qbuf) {
-  // printf("\n external called \n");
-  // printf("tokens[i]: '%s', tokens[i+1]: '%s' \n", tokens[*i], tokens[*i+1]);
   // create a varible to store pid
   // status code for waiting for child process to end
   pid_t pids[16];
-  int status;
+  int status = 0;
   pid_t pid;
   int null_token = 0;
   pid = proc_fork();
-
-  // CHANGE: look for a null token and set I to that instead of setting it to
-  // last token
-  /*for (int j = *i; j <= *n_tokens; j++) {
-    if (tokens[j] == NULL) {
-      null_token = j;
-      break;
-    }
-  }*/
 
   if (pid < 0) {
     perror("Fork Failed");
@@ -45,11 +34,12 @@ int runExternal(Command *cmd, char *qbuf) {
   else if (pid == 0) {
     // printf("from child \n");
     // printf("    Child process: PID = %d, Parent PID = %d\n", getpid(),
-    // getppid()); printf("    running commannd: %s and %s",tokens[*i],
-    // tokens[*i+1]);
+    // getppid());
+    // printf("    running commannd: %s and %s", cmd->command, cmd->args[0]);
     signal(SIGINT, SIG_DFL);
-    if (execvp(cmd->command, cmd->args) == -1) {
-      fprintf(stderr, "%s: %s\n", cmd->args, strerror(errno));
+    status = execvp(cmd->command, cmd->args);
+    if (status == -1) {
+      fprintf(stderr, "%s: %s\n", cmd->args[0], strerror(errno));
       exit(EXIT_FAILURE);
     }
   }
@@ -69,7 +59,7 @@ int runExternal(Command *cmd, char *qbuf) {
   }
 
   //*i = null_token;
-  return 0;
+  return status;
 }
 
 //          ╭─────────────────────────────────────────────────────────╮

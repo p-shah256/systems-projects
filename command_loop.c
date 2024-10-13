@@ -25,12 +25,13 @@ int runPipeline(Command *head, char *qbuf) {
   int pipeFD[2];
   pid_t childPids[32];
   int child_count = 0;
+  int exit_code = 0;
 
   while (current != NULL) {
     // check if current.next and current.prev is null
     // that means its the only command and we can run it as a standalone command
     if (current->next == NULL && current->prev == NULL) {
-      status = standaloneCommand(current, qbuf);
+      exit_code = standaloneCommand(current, qbuf);
     }
 
     //          ╭─────────────────────────────────────────────────────────╮
@@ -66,8 +67,7 @@ int runPipeline(Command *head, char *qbuf) {
       child_pid = runPipe(previous_pipe_read_end, -1, current);
       childPids[child_count] = child_pid;
       child_count++;
-      close(pipeFD[1]);
-      close(pipeFD[0]); // NOTE: can both ends - no more childs
+      close(previous_pipe_read_end);
     }
     current = current->next;
   }
@@ -75,8 +75,11 @@ int runPipeline(Command *head, char *qbuf) {
   // Wait for all child processes to finish
   for (int i = 0; i < child_count; i++) {
     waitpid(childPids[i], &status, 0);
+    exit_code = status;
+    printf("status: %d\n", status);
   }
-  return status;
+
+  return exit_code;
 }
 
 int arrayLength(char **args) {
@@ -94,22 +97,6 @@ int standaloneCommand(Command *cInput, char *qbuf) {
   }
 
   else if (strcmp(cInput->command, "cd") == 0) {
-    /*// sanitize cd*/
-    /*// "ls | grep grade | cd 1 2 > text.txt"*/
-    /*//                   ^^^ = i*/
-    /*char *argv[5];*/
-    /*int j = 0;*/
-    /*int y = i;*/
-    /*while (tokens[y] != NULL) {*/
-    /*  argv[j] = tokens[y];*/
-    /*  y++;*/
-    /*  j++;*/
-    /*}*/
-    /*// printf("\n cd called, token number: %d", i);*/
-    /*runcd(j, argv);*/
-    /*i = y;*/
-    //printf("# of cd arguements %s",arrayLength(cInput));
-
     runcd(cInput);
   }
 
@@ -119,7 +106,7 @@ int standaloneCommand(Command *cInput, char *qbuf) {
     if (cInput->output || cInput->input) {
       runRedirectExternal(cInput);
     } else {
-      runExternal(cInput, qbuf);
+      status = runExternal(cInput, qbuf);
     }
   }
   return status;

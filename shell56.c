@@ -31,7 +31,6 @@
     chdir(getenv("`"));
 }*/
 
-
 int main(int argc, char **argv) {
   bool interactive = isatty(STDIN_FILENO); /* see: man 3 isatty */
   FILE *fp = stdin;
@@ -77,13 +76,13 @@ int main(int argc, char **argv) {
     /* read a line, tokenize it, and print it out
      */
     int n_tokens = parse(line, max_tokens, tokens, linebuf, sizeof(linebuf));
-    for(int i=0;i<n_tokens;i++){
-        if(strcmp(tokens[i],"$?")==0){
-            tokens[i] = qbuf;
-        }
+    for (int i = 0; i < n_tokens; i++) {
+      if (strcmp(tokens[i], "$?") == 0) {
+        tokens[i] = qbuf;
+      }
     }
     Command *head = buildCommandList(n_tokens, tokens);
-    runPipeline(head,qbuf);
+    runPipeline(head, qbuf);
   }
   printf("\n");
 }

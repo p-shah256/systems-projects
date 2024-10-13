@@ -48,16 +48,16 @@ int runpwd() {
 }
 
 int runcd(Command *cd) {
-  //printf("Inside cd, moving to %s",argv[argc]);
+  // printf("Inside cd, moving to %s",argv[argc]);
   int status;
   char *location;
   int argc = 0;
   if (cd->args) {
-        for (int i = 1; cd->args[i] != NULL; i++) {
-            argc++;
-        }
+    for (int i = 1; cd->args[i] != NULL; i++) {
+      argc++;
     }
-   // printf("# of args %d",argc);
+  }
+  // printf("# of args %d",argc);
   if (argc == 0) {
     location = getenv("HOME");
   } else if (argc >= 2) {

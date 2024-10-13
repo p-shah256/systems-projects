@@ -77,7 +77,6 @@ int runPipeline(Command *head, char *qbuf) {
     waitpid(childPids[i], &status, 0);
     exit_code = status;
   }
-  *qbuf = exit_code;
   return exit_code;
 }
 

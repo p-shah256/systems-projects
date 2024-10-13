@@ -227,6 +227,9 @@ int checkAndRunPipes(char **tokens, int *n_tokens, char *qbuf) {
   return isPipe;
 }
 
+// NOTE: another impact of design
+// this thing has now reduced from 233 lines to 27 now...
+// and also takes over other responsibilites 🤯 🤯
 int runPipe(int pipeInput, int pipeOutput, Command *head) {
   int status = 0;
   pid_t pid = proc_fork();
@@ -237,14 +240,43 @@ int runPipe(int pipeInput, int pipeOutput, Command *head) {
 
   // CHILD
   if (pid == 0) {
+    // ── STDOUT CASES: ───────────────────────────────────────────────────
+    // pipe
+    if (pipeOutput != -1) {
+      // check if also redirect
+      dup2(pipeOutput, STDOUT_FILENO);
+      close(pipeOutput);
+    }
+    // redirect
+    else if (head->output != NULL) {
+      int fd = open(head->output, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      if (fd < 0) {
+        perror("open output file");
+        exit(EXIT_FAILURE);
+      }
+      dup2(fd, STDOUT_FILENO);
+      close(fd);
+    }
+    // ── STDIN CASES: ────────────────────────────────────────────────────
+    // pipe
     if (pipeInput != -1) {
       dup2(pipeInput, STDIN_FILENO);
       close(pipeInput);
     }
-    if (pipeOutput != -1) {
-      dup2(pipeOutput, STDOUT_FILENO);
-      close(pipeOutput);
+    // redirect
+    else if (head->input != NULL) {
+      int fd = open(head->input, O_RDONLY);
+      if (fd < 0) {
+        perror("open input file");
+        exit(EXIT_FAILURE);
+      }
+      dup2(fd, STDIN_FILENO);
+      close(fd);
     }
+
+    // SO if above it will redirect else it will simply execute removing the
+    // need for runexternal command!
+    // NOTE: another impact of design
     if (execvp(head->command, head->args) == -1) {
       perror("execvp failed");
       exit(EXIT_FAILURE);

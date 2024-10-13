@@ -69,6 +69,10 @@ int runPipeline(Command *head, char *qbuf) {
     current = current->next;
   }
 
+  // Wait for all child processes to finish
+  for (int i = 0; i < child_count; i++) {
+    waitpid(childPids[i], &status, 0);
+  }
   return status;
 }
 
@@ -107,18 +111,6 @@ int standaloneCommand(Command *cInput, char *qbuf) {
   }
 
   else if (strcmp(cInput->command, "exit") == 0) {
-    // printf("\n exit called, token number: %d", i);
-    // char *argv[1];
-    // int j = 0;
-    // int y = i + 1;
-    // while (tokens[y] != NULL) {
-    //   argv[j] = tokens[y];
-    //   y++;
-    //   j++;
-    // }
-    // // printf("\nexit called with status %s", argv[0]);
-    // // exit(atoi(argv[0]));
-    // runexit(j, argv);
     runexit(arrayLength(cInput) - 1, cInput->args);
   } else {
     if (cInput->output || cInput->input) {

@@ -13,3 +13,7 @@ drwxr-xr-x  4 charlescarlson  staff    128 Oct 12 15:08 gradescope
 -rw-r--r--  1 charlescarlson  staff   2036 Oct 12 19:35 shell56.c
 drwxr-xr-x  3 charlescarlson  staff     96 Oct  1 09:46 shell56.dSYM
 -rw-r--r--  1 charlescarlson  staff    965 Oct 12 19:56 shell56_commands.h
+command_loop.c
+external_commands.c
+internal_commands.c
+shell56_commands.h

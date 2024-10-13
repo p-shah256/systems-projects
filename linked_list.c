@@ -59,7 +59,6 @@ Command *buildCommandList(int n_tokens, char **tokens) {
     while (i < n_tokens && strcmp(tokens[i], "|") != 0 &&
            strcmp(tokens[i], "<") != 0 && strcmp(tokens[i], ">") != 0) {
       i++;
-      //printf("commands: %s",tokens[i]);
     }
     int arg_count = i - arg_start;
     current->args = malloc((arg_count + 1) * sizeof(char *));
@@ -70,10 +69,6 @@ Command *buildCommandList(int n_tokens, char **tokens) {
     if (arg_count > 0) {
       current->command = tokens[arg_start];
     }
-    /*for(int i=0;i<arg_count;i++){
-      printf("args %d %s \n",i,current->args[i]);
-    }*/
-    //printf("command: %s\n",current->command);
 
     // Parse redirections or pipe
     while (i < n_tokens &&

@@ -13,6 +13,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+// can be optimised, here's how:
+// run everything throw runpipe - redirect is redundant
+// but mehhhh......
 int runPipeline(Command *head, char *qbuf) {
 
   int status = 0;

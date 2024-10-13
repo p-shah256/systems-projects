@@ -72,7 +72,7 @@ int runcd(Command *cd) {
   status = chdir(location);
   if (status != 0) {
     fprintf(stderr, "cd: %s\n", strerror(errno));
-    exit(1);
+    //exit(1);
     return 1;
   }
   return 0;

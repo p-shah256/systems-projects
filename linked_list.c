@@ -104,3 +104,24 @@ Command *buildCommandList(int n_tokens, char **tokens) {
 
   return head;
 }
+
+void freeCommandList(Command *head) {
+  Command *current = head;
+  while (current != NULL) {
+    Command *next = current->next;
+
+    // Free the args array if it's allocated
+    if (current->args != NULL) {
+      free(current->args);
+    }
+
+    // Since command, input, and output are pointers to tokens
+    // (which are not dynamically allocated within these functions),
+    // we do not free them here to avoid double-freeing.
+
+    // Free the Command structure itself
+    free(current);
+
+    current = next;
+  }
+}

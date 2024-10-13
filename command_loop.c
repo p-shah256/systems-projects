@@ -76,9 +76,8 @@ int runPipeline(Command *head, char *qbuf) {
   for (int i = 0; i < child_count; i++) {
     waitpid(childPids[i], &status, 0);
     exit_code = status;
-    printf("status: %d\n", status);
   }
-
+  *qbuf = exit_code;
   return exit_code;
 }
 

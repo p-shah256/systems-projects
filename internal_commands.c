@@ -67,7 +67,7 @@ int runcd(Command *cd) {
     location = cd->args[argc];
   }
 
-   printf("location: %s\n", location);
+  //printf("location: %s\n", location);
   status = chdir(location);
   if (status != 0) {
     fprintf(stderr, "cd: %s\n", strerror(errno));

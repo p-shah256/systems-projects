@@ -60,18 +60,22 @@ int runcd(Command *cd) {
   // printf("# of args %d",argc);
   if (argc == 0) {
     location = getenv("HOME");
+    //qbuf = "0";
   } else if (argc >= 2) {
     fprintf(stderr, "cd: wrong number of arguments\n");
+    //qbuf = "1";
     //exit(1);
     return 1;
   } else {
     location = cd->args[argc];
+    //qbuf = "0";
   }
 
   //printf("location: %s\n", location);
   status = chdir(location);
   if (status != 0) {
     fprintf(stderr, "cd: %s\n", strerror(errno));
+    //qbuf = "1";
     //exit(1);
     return 1;
   }

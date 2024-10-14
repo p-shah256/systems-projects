@@ -104,7 +104,7 @@ int standaloneCommand(Command *cInput, char *qbuf) {
   }
 
   else if (strcmp(cInput->command, "cd") == 0) {
-    runcd(cInput);
+    sprintf(qbuf, "%d", runcd(cInput));
   }
 
   else if (strcmp(cInput->command, "exit") == 0) {

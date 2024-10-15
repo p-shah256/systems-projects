@@ -10,6 +10,8 @@ typedef struct Command {
   char *output;
   struct Command *next;
   struct Command *prev;
+  int next_pipe; // 0 for pipe amd 1 for AND
+  int negate;    // 0 for negation
 } Command;
 #endif // SHELL56_COMMANDS_H
 

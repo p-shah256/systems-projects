@@ -33,6 +33,8 @@ Command *createCommand() {
   cmd->output = NULL;
   cmd->next = NULL;
   cmd->prev = NULL;
+  cmd->next_pipe = 0;
+  cmd->negate = 1;
   return cmd;
 }
 
@@ -54,10 +56,14 @@ Command *buildCommandList(int n_tokens, char **tokens) {
   while (i < n_tokens) {
     current = createCommand();
 
+    //          ╭─────────────────────────────────────────────────────────╮
+    //          │                        SPLITTER                         │
+    //          ╰─────────────────────────────────────────────────────────╯
     // Parse command and arguments
     int arg_start = i;
     while (i < n_tokens && strcmp(tokens[i], "|") != 0 &&
-           strcmp(tokens[i], "<") != 0 && strcmp(tokens[i], ">") != 0) {
+           strcmp(tokens[i], "<") != 0 && strcmp(tokens[i], ">") != 0 &&
+           strcmp(tokens[i], "&&") != 0 && strcmp(tokens[i], "!") != 0) {
       i++;
     }
     int arg_count = i - arg_start;
@@ -70,10 +76,14 @@ Command *buildCommandList(int n_tokens, char **tokens) {
       current->command = tokens[arg_start];
     }
 
+    //          ╭─────────────────────────────────────────────────────────╮
+    //          │                         SETTER                          │
+    //          ╰─────────────────────────────────────────────────────────╯
     // Parse redirections or pipe
     while (i < n_tokens &&
            (strcmp(tokens[i], "<") == 0 || strcmp(tokens[i], ">") == 0 ||
-            strcmp(tokens[i], "|") == 0)) {
+            strcmp(tokens[i], "|") == 0 || strcmp(tokens[i], "&&") == 0 ||
+            strcmp(tokens[i], "!") == 0)) {
       if (strcmp(tokens[i], "<") == 0) {
         i++;
         if (i < n_tokens) {
@@ -94,7 +104,16 @@ Command *buildCommandList(int n_tokens, char **tokens) {
         }
       } else if (strcmp(tokens[i], "|") == 0) {
         i++;
-        break; // Move to the next command in the pipeline
+        current->next_pipe = 0;
+        break;
+      } else if (strcmp(tokens[i], "&&") == 0) {
+        i++;
+        current->next_pipe = 1; // Use next_type for logical AND
+        break;
+      } else if (strcmp(tokens[i], "!") == 0) { // Handle negation
+        i++;
+        current->negate = 1; // Set negate to 1 when '!' is found
+        break;
       }
     }
 
@@ -123,5 +142,45 @@ void freeCommandList(Command *head) {
     free(current);
 
     current = next;
+  }
+}
+
+void printCommandList(Command *head) {
+  Command *current = head;
+
+  while (current != NULL) {
+    // Print the command and its arguments
+    if (current->command != NULL) {
+      printf("Command: %s\n", current->command);
+    }
+    if (current->args != NULL) {
+      printf("Arguments: ");
+      for (int i = 0; current->args[i] != NULL; i++) {
+        printf("%s ", current->args[i]);
+      }
+      printf("\n");
+    }
+
+    // Print input redirection if present
+    if (current->input != NULL) {
+      printf("Input redirection: %s\n", current->input);
+    }
+
+    // Print output redirection if present
+    if (current->output != NULL) {
+      printf("Output redirection: %s\n", current->output);
+    }
+
+    // Print the chaining type (| or &&)
+    if (current->next_pipe == 0) {
+      printf("Next command type: PIPE (|)\n");
+    } else if (current->next_pipe == 1) {
+      printf("Next command type: AND (&&)\n");
+    }
+
+    printf("-----\n"); // Separator for each command
+
+    // Move to the next command in the list
+    current = current->next;
   }
 }

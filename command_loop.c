@@ -30,7 +30,9 @@ int runPipeline(Command *head, char *qbuf) {
   while (current != NULL) {
     // check if current.next and current.prev is null
     // that means its the only command and we can run it as a standalone command
-    if (current->next == NULL && current->prev == NULL) {
+    // and next is not a pipe
+    if (current->next == NULL && current->prev == NULL &&
+        current->next_pipe != 1) {
       exit_code = standaloneCommand(current, qbuf);
     }
 
@@ -104,13 +106,18 @@ int standaloneCommand(Command *cInput, char *qbuf) {
   }
 
   else if (strcmp(cInput->command, "exit") == 0) {
-    sprintf(qbuf,"%d",runexit(cInput));
+    sprintf(qbuf, "%d", runexit(cInput));
     // status = ;
   } else {
     if (cInput->output || cInput->input) {
       runRedirectExternal(cInput);
     } else {
       status = runExternal(cInput, qbuf);
+      // if (cInput->negate == 0) {
+      // sprintf(qbuf, "%d", status);
+      // } else {
+      // sprintf(qbuf, "%d", status);
+      // }
     }
   }
   return status;

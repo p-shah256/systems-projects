@@ -31,7 +31,6 @@ int runexit(Command *cmd) {
   } else {
     fprintf(stderr, "exit: too many arguments\n");
     status = 1;
-    exit(1);
   }
   return status;
 }
@@ -60,15 +59,11 @@ int runcd(Command *cd) {
   // printf("# of args %d",argc);
   if (argc == 0) {
     location = getenv("HOME");
-    //qbuf = "0";
   } else if (argc >= 2) {
     fprintf(stderr, "cd: wrong number of arguments\n");
-    //qbuf = "1";
-    //exit(1);
     return 1;
   } else {
     location = cd->args[argc];
-    //qbuf = "0";
   }
 
   //printf("location: %s\n", location);

@@ -27,6 +27,9 @@ int runExternal(Command *cmd, char *qbuf) {
   int null_token = 0;
   pid = proc_fork();
 
+  // printf("command: %s, input: %s, output: %s \n", cmd->command, cmd->input,
+  // cmd->output);
+
   if (pid < 0) {
     perror("Fork Failed");
   }
@@ -264,7 +267,7 @@ int runPipe(int pipeInput, int pipeOutput, Command *head) {
       close(fd);
     }
 
-   if (execvp(head->command, head->args) == -1) {
+    if (execvp(head->command, head->args) == -1) {
       perror("execvp failed");
       exit(EXIT_FAILURE);
     }

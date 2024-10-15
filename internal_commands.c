@@ -18,12 +18,12 @@
 int runexit(Command *cmd) {
   // printf("\n argv: %s", argv[0]);
   int status = 0;
-    int argc = 0;
+  int argc = 0;
   if (cmd->args) {
-        for (int i = 1; cmd->args[i] != NULL; i++) {
-            argc++;
-        }
+    for (int i = 1; cmd->args[i] != NULL; i++) {
+      argc++;
     }
+  }
   if (argc == 0) {
     exit(0);
   } else if (argc == 1) {
@@ -66,12 +66,12 @@ int runcd(Command *cd) {
     location = cd->args[argc];
   }
 
-  //printf("location: %s\n", location);
+  // printf("location: %s\n", location);
   status = chdir(location);
   if (status != 0) {
     fprintf(stderr, "cd: %s\n", strerror(errno));
-    //qbuf = "1";
-    //exit(1);
+    // qbuf = "1";
+    // exit(1);
     return 1;
   }
   return 0;
@@ -95,6 +95,7 @@ int runRedirectExternal(Command *cmd) {
     filename = cmd->output;
     redirect = ">";
   }
+
   pid_t pids[16];
   int status;
   pid_t pid;

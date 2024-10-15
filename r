@@ -8,7 +8,6 @@ linked_list.c
 Makefile
 parser.c
 parser.h
-r
 README.md
 shell56
 shell56.c

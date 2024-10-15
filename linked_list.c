@@ -90,7 +90,7 @@ Command *buildCommandList(int n_tokens, char **tokens) {
           current->input = tokens[i];
           i++;
         } else {
-          fprintf(stderr, "Syntax error: expected input file after '<'\n");
+          // fprintf(stderr, "Syntax error: expected input file after '<'\n");
           break;
         }
       } else if (strcmp(tokens[i], ">") == 0) {
@@ -99,7 +99,7 @@ Command *buildCommandList(int n_tokens, char **tokens) {
           current->output = tokens[i];
           i++;
         } else {
-          fprintf(stderr, "Syntax error: expected output file after '>'\n");
+          // fprintf(stderr, "Syntax error: expected output file after '>'\n");
           break;
         }
       } else if (strcmp(tokens[i], "|") == 0) {
@@ -155,10 +155,12 @@ void printCommandList(Command *head) {
     }
     if (current->args != NULL) {
       printf("Arguments: ");
-      for (int i = 0; current->args[i] != NULL; i++) {
+      int i;
+      for (i = 0; current->args[i] != NULL; i++) {
         printf("%s ", current->args[i]);
       }
       printf("\n");
+      printf("argumemnt count: %d\n", i);
     }
 
     // Print input redirection if present

@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
       }
     }
     Command *head = buildCommandList(n_tokens, tokens);
-    printCommandList(head);
+    // printCommandList(head);
     runPipeline(head, qbuf);
     freeCommandList(head);
   }

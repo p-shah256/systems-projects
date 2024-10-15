@@ -76,12 +76,8 @@ int runPipeline(Command *head, char *qbuf) {
   for (int i = 0; i < child_count; i++) {
     waitpid(childPids[i], &status, 0);
     if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-      // printf("Process %d finished \n",childPids[i]);
-      // printf("status is %s",WEXITSTATUS(status));
       sprintf(qbuf, "%d", WEXITSTATUS(status));
     } else {
-      // printf("Process %d failed \n",childPids[i]);
-      // printf("status is %s",WEXITSTATUS(status));
       sprintf(qbuf, "%d", WEXITSTATUS(status));
     }
     exit_code = status;
@@ -109,6 +105,7 @@ int standaloneCommand(Command *cInput, char *qbuf) {
 
   else if (strcmp(cInput->command, "exit") == 0) {
     sprintf(qbuf,"%d",runexit(cInput));
+    // status = ;
   } else {
     if (cInput->output || cInput->input) {
       runRedirectExternal(cInput);

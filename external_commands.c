@@ -21,6 +21,9 @@
 int runExternal(Command *cmd, char *qbuf) {
   // create a varible to store pid
   // status code for waiting for child process to end
+  if(cmd->redirect == 0){
+    return 1;
+  }
   pid_t pids[16];
   int status = 0;
   pid_t pid;

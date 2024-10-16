@@ -8,6 +8,7 @@ typedef struct Command {
   char **args;
   char *input;
   char *output;
+  int redirect;
   struct Command *next;
   struct Command *prev;
   int next_pipe; // 0 for pipe amd 1 for AND

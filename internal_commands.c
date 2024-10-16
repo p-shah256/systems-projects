@@ -88,12 +88,17 @@ int runRedirectExternal(Command *cmd) {
   char *command = cmd->command;
   char *filename;
   char *redirect;
-  if (cmd->input) {
+    if (cmd->input != NULL && strcmp(cmd->input,"<") != 0
+        && strcmp(cmd->input,">") != 0 ) {
     filename = cmd->input;
     redirect = "<";
-  } else {
+  } else if(cmd->output != NULL && strcmp(cmd->output,"<") != 0
+            && strcmp(cmd->output,">") != 0 ) {
     filename = cmd->output;
     redirect = ">";
+  }
+  else{
+      return 1;
   }
 
   pid_t pids[16];

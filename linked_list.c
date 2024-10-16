@@ -85,6 +85,7 @@ Command *buildCommandList(int n_tokens, char **tokens) {
             strcmp(tokens[i], "|") == 0 || strcmp(tokens[i], "&&") == 0 ||
             strcmp(tokens[i], "!") == 0)) {
       if (strcmp(tokens[i], "<") == 0) {
+        current->redirect = 0;
         i++;
         if (i < n_tokens) {
           current->input = tokens[i];
@@ -94,6 +95,7 @@ Command *buildCommandList(int n_tokens, char **tokens) {
           break;
         }
       } else if (strcmp(tokens[i], ">") == 0) {
+        current->redirect = 0;
         i++;
         if (i < n_tokens) {
           current->output = tokens[i];

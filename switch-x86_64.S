@@ -4,31 +4,30 @@
  * class:       CS 5600, Fall 2024
  */
 
-/* gcc -S stack.c:
-    void *setup_stack(void *_stack, void *func, void *arg1, void *arg2)
-    {
-        long *stack = _stack - ((long)_stack & 0x0F);
-        long old_bp = (long)stack;  /* top frame - SP = BP */
+// gcc -S stack.c:
+//  void *setup_stack(void *_stack, void *func, void *arg1, void *arg2)
+//  {
+//      long *stack = _stack - ((long)_stack & 0x0F);
+//      long old_bp = (long)stack;  /* top frame - SP = BP */
 
-        *(--stack) = 0x3A3A3A3A3A3A3A3A;    /* guard zone */
-        *(--stack) = 0x3A3A3A3A3A3A3A3A;
-        *(--stack) = 0x3A3A3A3A3A3A3A3A;
+//      *(--stack) = 0x3A3A3A3A3A3A3A3A;    /* guard zone */
+//      *(--stack) = 0x3A3A3A3A3A3A3A3A;
+//      *(--stack) = 0x3A3A3A3A3A3A3A3A;
 
-        /* this is the stack frame calling 'switch_to'
-         */
-        *(--stack) = (long)func;     /* return address */
-        *(--stack) = old_bp;        /* %rbp */
-        *(--stack) = (long)arg2;     /* argument */                 // RSI
-        *(--stack) = (long)arg1;     /* argument (reverse order) */ // RDI 
-        *(--stack) = 0;             /* %rbx */
-        *(--stack) = 0;             /* %r12 */
-        *(--stack) = 0;             /* %r13 */
-        *(--stack) = 0;             /* %r14 */
-        *(--stack) = 0;             /* %r15 */
-        *(--stack) = 0xa5a5a5a5a5a5a5a5;    /* valid stack flag */
-        return stack;
-    }
- */
+//      /* this is the stack frame calling 'switch_to'
+//       */
+//      *(--stack) = (long)func;     /* return address */
+//      *(--stack) = old_bp;        /* %rbp */
+//      *(--stack) = (long)arg2;     /* argument */                 // RSI
+//      *(--stack) = (long)arg1;     /* argument (reverse order) */ // RDI 
+//      *(--stack) = 0;             /* %rbx */
+//      *(--stack) = 0;             /* %r12 */
+//      *(--stack) = 0;             /* %r13 */
+//      *(--stack) = 0;             /* %r14 */
+//      *(--stack) = 0;             /* %r15 */
+//      *(--stack) = 0xa5a5a5a5a5a5a5a5;    /* valid stack flag */
+//      return stack;
+//  }
 
         .text
         .globl  setup_stack

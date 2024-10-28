@@ -15,6 +15,8 @@
 #include <errno.h>
 #include "qthread.h"
 
+//Working with up to 4 threads, will be at most using 3
+#define NUM_THREADS 4
 /* prototypes for stack.c and switch.s
  * see source files for additional details
  */
@@ -25,27 +27,59 @@ extern void *setup_stack(void *_stack, size_t len, void *func, void *arg1, void 
 /* this is your qthread structure.
  */
 struct qthread {
-    /* your code here */;
+    struct qthread* next;
+    uint16_t saved_stack_pointer;
+    uint16_t timing_information;
 };    
 
 /* You'll probably want to define a thread queue structure, and
  * functions to append and remove threads. (Note that you only need to
  * remove the oldest item from the head, makes removal a lot easier)
  */
+
+//structure is holding the array of threads and allows for adding or taking away from queue.
 struct threadq {
     /* your code here */
+    struct qthread queue[NUM_THREADS];
+    int front;
+    int back;
+    int size;
+    void (*enqueue)(struct threadq *queue,struct qthread *thread);
+    struct qthread (*dequeue)(struct threadq *queue);
 };
 
-    
+void enqueue(struct threadq *queue,struct qthread *thread) {
+  if(queue->size == 0){
+   return;
+  }
+ queue->back = (queue->back + 1) % NUM_THREADS;
+ queue->queue[queue->back] = *thread;
+ queue->size = queue->size + 1;
+ printf("Enqueued thread %p\n",thread);
+}
+
+struct qthread dequeue(struct threadq *queue) {
+ if(queue->size == 0){
+   printf("Empty queue to dequeue\n");
+ }
+ struct qthread *thread = &queue->queue[queue->front];
+ queue->front = (queue->front + 1) % NUM_THREADS;
+ queue->size = queue->size - 1;
+ printf("Dequeued thread %p\n",thread);
+ return *thread;
+}
 /* Mutex and cond structures - @allocate them in qthread_mutex_create / 
  * qthread_cond_create and free them in @the corresponding _destroy functions.
  */
 struct qthread_mutex {
-    /* your code here */;
+    /* mutex holds flag and queue, flag is whether mutex is locked or not. */;
+    uint16_t flag;
+    struct threadq *queue;
 };
 
 struct qthread_cond {
-    /* your code here */;
+    /* conditional variables is a queue of thread structures */;
+    struct threadq *queue;
 };
 
 

@@ -5,15 +5,16 @@
  */
 
 // gcc -S stack.c:
-//  void *setup_stack(void *_stack, void *func, void *arg1, void *arg2)
-//  {
-//      long *stack = _stack - ((long)_stack & 0x0F);
+//void *setup_stack(void *_stack, int len, void *func, void *arg1, void *arg2)
+//{
+//      _stack += len;
+//      long *stack = (long*)(_stack - ((long)_stack & 0x0F));
 //      long old_bp = (long)stack;  /* top frame - SP = BP */
-
+//
 //      *(--stack) = 0x3A3A3A3A3A3A3A3A;    /* guard zone */
 //      *(--stack) = 0x3A3A3A3A3A3A3A3A;
 //      *(--stack) = 0x3A3A3A3A3A3A3A3A;
-
+//
 //      /* this is the stack frame calling 'switch_to'
 //       */
 //      *(--stack) = (long)func;     /* return address */
@@ -27,42 +28,45 @@
 //      *(--stack) = 0;             /* %r15 */
 //      *(--stack) = 0xa5a5a5a5a5a5a5a5;    /* valid stack flag */
 //      return stack;
-//  }
+//}
 
-        .text
-        .globl  setup_stack
-        .type   setup_stack, @function
+	.text
+	.globl	setup_stack
+	.type	setup_stack, @function
 setup_stack:
 .LFB0:
-        .cfi_startproc
-        andq    $-16, %rdi
-        movabsq $4195730024608447034, %rax
-        movq    %rax, -8(%rdi)
-        movq    %rax, -16(%rdi)
-        movq    %rax, -24(%rdi)
-        movq    %rsi, -32(%rdi)
-        movq    %rdi, -40(%rdi)
-        movq    %rcx, -48(%rdi)
-        movq    %rdx, -56(%rdi)
-        movq    $0, -64(%rdi)
-        movq    $0, -72(%rdi)
-        movq    $0, -80(%rdi)
-        movq    $0, -88(%rdi)
-        movq    $0, -96(%rdi)
-        movabsq $-6510615555426900571, %rax
-        movq    %rax, -104(%rdi)
-        leaq    -104(%rdi), %rax
-        ret
-        .cfi_endproc
+	.cfi_startproc
+	endbr64
+	movslq	%esi, %rsi
+	addq	%rsi, %rdi
+	andq	$-16, %rdi
+	movabsq	$4195730024608447034, %rax
+	movq	%rax, -8(%rdi)
+	movq	%rax, -16(%rdi)
+	movq	%rax, -24(%rdi)
+	movq	%rdx, -32(%rdi)
+	movq	%rdi, -40(%rdi)
+	movq	%r8, -48(%rdi)
+	movq	%rcx, -56(%rdi)
+	movq	$0, -64(%rdi)
+	movq	$0, -72(%rdi)
+	movq	$0, -80(%rdi)
+	movq	$0, -88(%rdi)
+	movq	$0, -96(%rdi)
+	movabsq	$-6510615555426900571, %rax
+	movq	%rax, -104(%rdi)
+	leaq	-104(%rdi), %rax
+	ret
+	.cfi_endproc
 .LFE0:
-        .size   setup_stack, .-setup_stack
+	.size	setup_stack, .-setup_stack
 
 /*
- * switch_to - save stack pointer to *location_for_old_sp, set 
+ * switch_thread - save stack pointer to *location_for_old_sp, set 
  *             stack pointer to 'new_value', and return.
  *             Note that the return takes place on the new stack.
  *
- * switch_to(void **location_for_old_sp, void *new_value)
+ * switch_thread(void **location_for_old_sp, void *new_value)
  *   location_for_old_sp = RDI
  *   new_value = RSI
  *
@@ -70,7 +74,7 @@ setup_stack:
  *  http://refspecs.linuxbase.org/elf/x86_64-abi-0.99.pdf
  */
  
-switch_to:
+switch_thread:
         /* frame pointer - makes life easier in assembler, too 
 	 */
 	push %rbp 
@@ -124,4 +128,4 @@ skip:
 	pop %rbp		/* and the frame pointer */
 	ret			/* and return */
 
-.global	switch_to
+.global	switch_thread

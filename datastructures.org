@@ -1,0 +1,68 @@
+* cooperative threading library:
+threads continue executing until:
+a. either they yield control
+b. block
+c. exits / done.
+
+
+*** Functions:
+**** qthread init() :
+sets up the environment for threading and moves the current sequence of execution onto a thread = main thread.
+  - init the queue and set the main thread as active
+  - MAYBE? create a runnable queue and waiting queue and ended queue?
+    + ~NOT REQUIRED~ as each of the mutexes and condition variables will have their own queues.
+**** qthread_create():
+create a new thread by
+- allocate a new struct thread
+- make it runnable
+- enqueue
+~DOES NOT RUN THE THREAD~
+
+
+
+
+** Thread control block or qthread:
+stored using a linked list as:
+1. it's inherently flexible and makes it easier to add/remove threads in o(1)
+2. variable size
+3. dynamic memory management
+
+
+
+#+begin_src ascii
++---------------------+
+|                     |
+|                     |
+|                     |
+|                     |
+|                     |
+|                     |
+|                     |
+|                     |
+|                     |
+|                     |
+|                     |
+|                     |
+|                     |
+|                     |
++---------------------+
+|                     |
+|                     |
+| actual_th_fun()     |
+|                     |
+| return()            |
+|                     |
+|                     |
++---------------------+
+|                     |
+|     wrapper()       | <--------
+|     exit()          |     this is executed to call exit
+|                     |     on the thread
++---------------------+
+#+END_SRC
+almost always should setup_stack with
+            a wrapper function that goes something like
+            func wrapper(){
+                int val = actual_th_func();
+                exit(val);
+            }

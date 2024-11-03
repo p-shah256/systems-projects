@@ -21,6 +21,24 @@ create a new thread by
 
 
 
+
+*** Concepts:
+**** condition variables:
+cond var is just a queue of threads
+- *signal* takes the front of the queue and makes it runnable
+- *wait* puts the current thread on to that queue and switches to a runnable thread
+  	if you wait and there are no runnable threads - its a deadlock ... except timers
+**** scheduler:
+***** globals: (all runnable) -- must be global so it can be accessed and whenever we switch stack does not get lost
+thread* current is the pointer to currently running thread.
+	if this calls yield we put it in the tail and take one thread off the queue - popFront() and set it to active.
+q<thread> active which is the list of runnable threads.
+***** other blocked threads:
+condition variable queue and mutex queue
+whenever I signal a condition variable waiting queue thread - it is poped off from there and then pushed onto the active list above
+that is what "waking up" means.
+
+
 ** Thread control block or qthread:
 stored using a linked list as:
 1. it's inherently flexible and makes it easier to add/remove threads in o(1)

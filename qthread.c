@@ -15,6 +15,7 @@
 #include <sys/time.h>
 #include <errno.h>
 #include "qthread.h"
+#include "qthread_manager.c"
 
 //Working with up to 4 threads, will be at most using 3
 #define NUM_THREADS 4
@@ -32,50 +33,6 @@ extern void switch_thread(void **location_for_old_sp, void *new_value);
 //       returns a stack pointer
 extern void *setup_stack(void *_stack, size_t len, f_2arg_t f, f_1arg_t f2, void *arg);
 
-/* this is your qthread structure.
- */
-struct qthread {
-    struct qthread* next;
-    uint16_t saved_stack_pointer;
-    uint16_t timing_information;
-};
-
-// HINT: treat this like a TCB
-/* You'll probably want to define a thread queue structure, and
- * functions to append and remove threads. (Note that you only need to
- * remove the oldest item from the head, makes removal a lot easier)
- */
-//structure is holding the array of threads and allows for adding or taking away from queue.
-struct threadq {
-    /* your code here */
-    struct qthread queue[NUM_THREADS];
-    int front;
-    int back;
-    int size;
-    void (*enqueue)(struct threadq *queue,struct qthread *thread);
-    struct qthread (*dequeue)(struct threadq *queue);
-};
-
-void enqueue(struct threadq *queue,struct qthread *thread) {
-  if(queue->size == 0){
-   return;
-  }
- queue->back = (queue->back + 1) % NUM_THREADS;
- queue->queue[queue->back] = *thread;
- queue->size = queue->size + 1;
- printf("Enqueued thread %p\n",thread);
-}
-
-struct qthread dequeue(struct threadq *queue) {
- if(queue->size == 0){
-   printf("Empty queue to dequeue\n");
- }
- struct qthread *thread = &queue->queue[queue->front];
- queue->front = (queue->front + 1) % NUM_THREADS;
- queue->size = queue->size - 1;
- printf("Dequeued thread %p\n",thread);
- return *thread;
-}
 /* Mutex and cond structures - @allocate them in qthread_mutex_create /
  * qthread_cond_create and free them in @the corresponding _destroy functions.
  */
@@ -85,45 +42,11 @@ struct qthread_mutex {
     struct threadq *queue;
 };
 
-struct qthread_cond {
+struct qthread_cond
+{
     /* conditional variables is a queue of thread structures */;
     struct threadq *queue;
 };
-
-void create_thread_wrapper(f_1arg_t f, void *arg1)
-{
-	void *val = f(arg1);
-	qthread_exit(val);
-}
-
-// HINT: calls f with arg1 - f(arg1)
-/* qthread_create - see hints @for how to implement it, especially the
- * reference to a "wrapper" function
- */
-qthread_t qthread_create(f_1arg_t f, void *arg1)
-{
-	// qthreads allows you to return from the thread function,
-	// you need to have a "wrapper" function which calls the thread function and then calls `qthread_exit` when it returns.
-
-	// 1. setup stack with wrapper function
-	void *stack = malloc(STACK_SIZE);
-	if (!stack) {
-		perror("Failed to allocate stack");
-		exit(1);
-	}
-	void *sp = setup_stack(stack, STACK_SIZE, create_thread_wrapper, f, arg1);
-	// let wrapper call the actual function requested by qthread_create
-
-	// 2. create the actual thread
-	struct qthread *thread = malloc(sizeof(qthread_t));
-	if (!thread) {
-		perror("Failed to allocate memory for qthread");
-		exit(1);
-	}
-	thread->saved_stack_pointer = (uint16_t) sp;
-
-	return thread;
-}
 
 /* I suggest factoring your code so that you have a 'schedule'
  * function which selects the next thread to run and @switches to it,
@@ -135,12 +58,7 @@ qthread_t qthread_create(f_1arg_t f, void *arg1)
  */
 void schedule(void *save_location);
 
-/* qthread_init - set up a thread structure for the main (OS-provided) thread
- */
-void qthread_init(void)
-{
-    /* your code here */
-}
+
 
 /* qthread_yield - yield to the next @runnable thread.
  */

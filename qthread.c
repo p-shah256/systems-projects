@@ -23,12 +23,14 @@
  * see source files for additional details
  */
 extern void switch_thread(void **location_for_old_sp, void *new_value);
-extern void start_thread(void *stack, void *func, void *arg1, void *arg2);
 // HINT: pushes a fake stack to return to func(arg1, arg2);
 //       MOSTLY should push a wrapper function that exits after the thread is done
 //       so that whenever we switch we execute the func
+//       F is the wrapper
+//       f2 is the function that should be called with arg =
+//       wrapper calls f2(arg)
 //       returns a stack pointer
-extern void *setup_stack(void *_stack, size_t len, void *func, void *arg1, void *arg2);
+extern void *setup_stack(void *_stack, size_t len, f_2arg_t f, f_1arg_t f2, void *arg);
 
 /* this is your qthread structure.
  */

@@ -20,8 +20,8 @@ typedef struct qthread_mutex qthread_mutex_t;
 struct qthread_cond;
 typedef struct qthread_cond qthread_cond_t;
 
-typedef void (*f_2arg_t)(void*, void*);
 typedef void * (*f_1arg_t)(void*);
+typedef void (*f_2arg_t)(f_1arg_t, void*);
 
 /* prototypes - see qthread.c for function descriptions
  */

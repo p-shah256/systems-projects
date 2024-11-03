@@ -6,6 +6,7 @@
 
 /* a bunch of includes which will be useful */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -17,11 +18,16 @@
 
 //Working with up to 4 threads, will be at most using 3
 #define NUM_THREADS 4
+#define STACK_SIZE 64*1024
 /* prototypes for stack.c and switch.s
  * see source files for additional details
  */
 extern void switch_thread(void **location_for_old_sp, void *new_value);
 extern void start_thread(void *stack, void *func, void *arg1, void *arg2);
+// HINT: pushes a fake stack to return to func(arg1, arg2);
+//       MOSTLY should push a wrapper function that exits after the thread is done
+//       so that whenever we switch we execute the func
+//       returns a stack pointer
 extern void *setup_stack(void *_stack, size_t len, void *func, void *arg1, void *arg2);
 
 /* this is your qthread structure.
@@ -30,13 +36,13 @@ struct qthread {
     struct qthread* next;
     uint16_t saved_stack_pointer;
     uint16_t timing_information;
-};    
+};
 
+// HINT: treat this like a TCB
 /* You'll probably want to define a thread queue structure, and
  * functions to append and remove threads. (Note that you only need to
  * remove the oldest item from the head, makes removal a lot easier)
  */
-
 //structure is holding the array of threads and allows for adding or taking away from queue.
 struct threadq {
     /* your code here */
@@ -68,7 +74,7 @@ struct qthread dequeue(struct threadq *queue) {
  printf("Dequeued thread %p\n",thread);
  return *thread;
 }
-/* Mutex and cond structures - @allocate them in qthread_mutex_create / 
+/* Mutex and cond structures - @allocate them in qthread_mutex_create /
  * qthread_cond_create and free them in @the corresponding _destroy functions.
  */
 struct qthread_mutex {
@@ -82,13 +88,39 @@ struct qthread_cond {
     struct threadq *queue;
 };
 
+void create_thread_wrapper(f_1arg_t f, void *arg1)
+{
+	void *val = f(arg1);
+	qthread_exit(val);
+}
 
+// HINT: calls f with arg1 - f(arg1)
 /* qthread_create - see hints @for how to implement it, especially the
  * reference to a "wrapper" function
  */
 qthread_t qthread_create(f_1arg_t f, void *arg1)
 {
-    /* your code here */
+	// qthreads allows you to return from the thread function,
+	// you need to have a "wrapper" function which calls the thread function and then calls `qthread_exit` when it returns.
+
+	// 1. setup stack with wrapper function
+	void *stack = malloc(STACK_SIZE);
+	if (!stack) {
+		perror("Failed to allocate stack");
+		exit(1);
+	}
+	void *sp = setup_stack(stack, STACK_SIZE, create_thread_wrapper, f, arg1);
+	// let wrapper call the actual function requested by qthread_create
+
+	// 2. create the actual thread
+	struct qthread *thread = malloc(sizeof(qthread_t));
+	if (!thread) {
+		perror("Failed to allocate memory for qthread");
+		exit(1);
+	}
+	thread->saved_stack_pointer = (uint16_t) sp;
+
+	return thread;
 }
 
 /* I suggest factoring your code so that you have a 'schedule'
@@ -96,7 +128,7 @@ qthread_t qthread_create(f_1arg_t f, void *arg1)
  * or goes to sleep if there aren't any threads left to run.
  *
  * NOTE - if you end up switching back to the same thread, do *NOT*
- * use do_switch - check for this case and return from schedule(), 
+ * use do_switch - check for this case and return from schedule(),
  * or else @you'll crash.
  */
 void schedule(void *save_location);
@@ -163,7 +195,7 @@ void qthread_cond_broadcast(qthread_cond_t *cond)
 
 
 /* Helper function for POSIX replacement API - you'll need to tell
- * time in order to implement qthread_usleep. 
+ * time in order to implement qthread_usleep.
  * WARNING - store return value in 'long' (64 bits), not 'int' (32 bits)
  */
 static long get_usecs(void)
@@ -175,14 +207,14 @@ static long get_usecs(void)
 
 /* POSIX replacement API. This semester we're only implementing 'usleep'
  *
- * If there are no runnable threads, your scheduler needs to wait, 
- * using one or more calls to the system usleep() function, until 
- * a thread blocked in 'qthread_usleep' is ready to wake up. 
+ * If there are no runnable threads, your scheduler needs to wait,
+ * using one or more calls to the system usleep() function, until
+ * a thread blocked in 'qthread_usleep' is ready to wake up.
  */
 
 
 /* qthread_usleep - yield to next runnable thread, making arrangements
- * to be put back on the active list after 'usecs' timeout. 
+ * to be put back on the active list after 'usecs' timeout.
  */
 void qthread_usleep(long int usecs)
 {

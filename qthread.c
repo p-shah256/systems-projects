@@ -28,9 +28,9 @@ extern void *setup_stack(void *_stack, size_t len, void *func, void *arg1, void 
  */
 struct qthread {
     struct qthread* next;
-    uint16_t saved_stack_pointer;
-    uint16_t timing_information;
-};    
+    void* saved_sp;
+    void* stack;
+};
 
 /* You'll probably want to define a thread queue structure, and
  * functions to append and remove threads. (Note that you only need to
@@ -39,36 +39,38 @@ struct qthread {
 
 //structure is holding the array of threads and allows for adding or taking away from queue.
 struct threadq {
-    /* your code here */
-    struct qthread queue[NUM_THREADS];
-    int front;
-    int back;
-    int size;
-    void (*enqueue)(struct threadq *queue,struct qthread *thread);
-    struct qthread (*dequeue)(struct threadq *queue);
+    struct qthread* front;
+    struct qthread* back;
 };
 
-void enqueue(struct threadq *queue,struct qthread *thread) {
-  if(queue->size == 0){
-   return;
+int isEmpty(struct threadq* q) {
+  if(q->front == q->back && q->back == NULL) {
+    return 1;
   }
- queue->back = (queue->back + 1) % NUM_THREADS;
- queue->queue[queue->back] = *thread;
- queue->size = queue->size + 1;
+    return 0;
+}
+
+void enqueue(struct threadq *queue,struct qthread *thread) {
+ if (queue->back == NULL) {
+   queue->front = queue->back = thread;
+ }
+ else{
+  queue->back->next = thread;
+ }
  printf("Enqueued thread %p\n",thread);
 }
 
-struct qthread dequeue(struct threadq *queue) {
- if(queue->size == 0){
+struct qthread* dequeue(struct threadq *queue) {
+ if(queue->front == NULL){
    printf("Empty queue to dequeue\n");
+   return NULL;
  }
- struct qthread *thread = &queue->queue[queue->front];
- queue->front = (queue->front + 1) % NUM_THREADS;
- queue->size = queue->size - 1;
- printf("Dequeued thread %p\n",thread);
- return *thread;
+  struct qthread* thread = queue->front;
+  queue->front = queue->front->next;
+  printf("Dequeued thread %p\n",thread);
+  return thread;
 }
-/* Mutex and cond structures - @allocate them in qthread_mutex_create / 
+/* Mutex and cond structures - @allocate them in qthread_mutex_create /
  * qthread_cond_create and free them in @the corresponding _destroy functions.
  */
 struct qthread_mutex {
@@ -96,7 +98,7 @@ qthread_t qthread_create(f_1arg_t f, void *arg1)
  * or goes to sleep if there aren't any threads left to run.
  *
  * NOTE - if you end up switching back to the same thread, do *NOT*
- * use do_switch - check for this case and return from schedule(), 
+ * use do_switch - check for this case and return from schedule(),
  * or else @you'll crash.
  */
 void schedule(void *save_location);
@@ -112,7 +114,7 @@ void qthread_init(void)
  */
 void qthread_yield(void)
 {
-    /* your code here */
+
 }
 
 /* qthread_exit, qthread_join - exit argument is returned by

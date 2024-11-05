@@ -10,6 +10,10 @@
 
 extern void *setup_stack(void *_stack, size_t len, f_2arg_t f, f_1arg_t f2, void *arg);
 
+//GLOBALS
+struct threadq active;
+struct qthread current;
+//
 /* this is your qthread structure. */
 struct qthread {
     struct qthread* next;
@@ -57,6 +61,13 @@ struct qthread pop_front(struct threadq *queue)
 	queue->front = new_head;
 	queue->size = queue -> size - 1;
 	return *head;
+}
+
+int isEmpty(struct threadq* q) {
+	if(q->front == q->end && q->end == NULL) {
+		return 1;
+	}
+	return 0;
 }
 
 /**********/
@@ -116,3 +127,45 @@ void qthread_init(void)
 	struct threadq *runnable_queue = malloc(sizeof(struct threadq));
 	/* runnable_queue->push_back(t) */
 }
+
+/* I suggest factoring your code so that you have a 'schedule'
+ * function which selects the next thread to run and @switches to it,
+ * or goes to sleep if there aren't any threads left to run.
+ *
+ * NOTE - if you end up switching back to the same thread, do *NOT*
+ * use do_switch - check for this case and return from schedule(),
+ * or else @you'll crash.
+ */
+void schedule();
+
+
+
+/* qthread_yield - yield to the next @runnable thread.
+ */
+void qthread_yield(void)
+{
+  if(active.size == 0){
+    return;
+  }
+  else{
+    //logic here
+    struct qthread tmp = current;
+	push_back(&active,&current);
+    current = pop_front(&active);
+    schedule();
+  }
+}
+
+/* qthread_exit, qthread_join - exit argument is returned by
+ * qthread_join. Note that join blocks if the thread hasn't exited
+ * yet, and is allowed to crash @if the thread doesn't exist.
+ */
+void qthread_exit(void *val)
+{
+	/* your code here */
+}
+void *qthread_join(qthread_t thread)
+{
+	/* your code here */
+}
+

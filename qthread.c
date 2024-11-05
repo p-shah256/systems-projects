@@ -56,43 +56,64 @@ struct qthread_cond
  * use do_switch - check for this case and return from schedule(),
  * or else @you'll crash.
  */
-void schedule(void *save_location);
+void schedule();
 
 
 
 /* qthread_yield - yield to the next @runnable thread.
  */
-void qthread_yield(void)
+/*void qthread_yield(void)
 {
     /* your code here */
-}
+//}
 
 /* qthread_exit, qthread_join - exit argument is returned by
  * qthread_join. Note that join blocks if the thread hasn't exited
  * yet, and is allowed to crash @if the thread doesn't exist.
  */
-void qthread_exit(void *val)
+/*void qthread_exit(void *val)
 {
     /* your code here */
-}
-void *qthread_join(qthread_t thread)
-{
+//}
+//void *qthread_join(qthread_t thread)
+//{
     /* your code here */
-}
+//}
 
 /* Mutex functions
  */
 qthread_mutex_t *qthread_mutex_create(void)
 {
+  struct qthread_mutex *mutex = malloc(sizeof(struct qthread_mutex));
+  return mutex;
 }
+
 void qthread_mutex_destroy(qthread_mutex_t *mutex)
 {
+  free(mutex);
+  return;
 }
+
 void qthread_mutex_lock(qthread_mutex_t *mutex)
 {
+  if(!mutex->flag == 1){
+    mutex->flag = 1;
+    return;
+  }
+  else{
+    push_back(mutex->queue,&current);
+    schedule();
+  }
 }
 void qthread_mutex_unlock(qthread_mutex_t *mutex)
 {
+  if(isEmpty(mutex->queue) == 1){
+    struct qthread tmp = pop_front(mutex->queue);
+    push_back(&active,&tmp);
+  }
+  else{
+    return;
+  }
 }
 
 /* Condition variable functions

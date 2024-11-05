@@ -37,11 +37,14 @@ struct qthread {
  * remove the oldest item from the head, makes removal a lot easier)
  */
 
-//structure is holding the array of threads and allows for adding or taking away from queue.
+//structure is holding the front and back threads
 struct threadq {
     struct qthread* front;
     struct qthread* back;
 };
+
+struct qthread current;
+struct threadq active;
 
 int isEmpty(struct threadq* q) {
   if(q->front == q->back && q->back == NULL) {
@@ -84,13 +87,22 @@ struct qthread_cond {
     struct threadq *queue;
 };
 
+qthread_t create_2arg_thread(f_2arg_t f, void *arg1, void *arg2) {
 
+}
+
+void wrapper_f (void *arg1, void *arg2) {
+  f_1arg_t f = arg1;
+  void* tmp = f(arg2);
+  qthread_exit(tmp);
+
+}
 /* qthread_create - see hints @for how to implement it, especially the
  * reference to a "wrapper" function
  */
 qthread_t qthread_create(f_1arg_t f, void *arg1)
 {
-    /* your code here */
+    return create_2arg_thread(wrapper_f,f,arg1);
 }
 
 /* I suggest factoring your code so that you have a 'schedule'

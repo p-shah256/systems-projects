@@ -17,6 +17,14 @@ create a new thread by
 - make it runnable
 - enqueue
 ~DOES NOT RUN THE THREAD~
+**** setup_stack():
+pushes a fake stack to return to func(arg1, arg2);
+MOSTLY should push a wrapper function that exits after the thread is done
+so that whenever we switch we execute the func
+F is the wrapper
+f2 is the function that should be called with arg =
+wrapper calls f2(arg)
+returns a stack pointer
 
 
 
@@ -29,6 +37,7 @@ cond var is just a queue of threads
 - *wait* puts the current thread on to that queue and switches to a runnable thread
   	if you wait and there are no runnable threads - its a deadlock ... except timers
 **** scheduler:
+we can think of the scheduler like a kernel. whenver a thread wants to yield or give up control - it invokes the scheduler which then decides who to run next and switches to it. scheduler much like the kernel in supervisor mode can run in the same thread.
 ***** globals: (all runnable) -- must be global so it can be accessed and whenever we switch stack does not get lost
 thread* current is the pointer to currently running thread.
 	if this calls yield we put it in the tail and take one thread off the queue - popFront() and set it to active.

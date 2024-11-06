@@ -5,6 +5,23 @@ b. block
 c. exits / done.
 
 
+** data structures
+#+BEGIN_EXAMPLE
+          +-----+
+          |     |
+current   |     |
+          +-----+                              
+
+RUNNABLE_THREADS queue:
+          +-----+    +-----+   +-----+
+          |     +---->     +--->     +---> null
+back  ----+>    |    |     |   |     |
+          +-----+    +-----+   +--^--+
+                                  |
+front ----------------------------+
+#+END_EXAMPLE
+
+
 *** Functions:
 **** qthread init() :
 sets up the environment for threading and moves the current sequence of execution onto a thread = main thread.
@@ -17,6 +34,21 @@ create a new thread by
 - make it runnable
 - enqueue
 ~DOES NOT RUN THE THREAD~
+   #+BEGIN_VERSE
+	+-----------------+
+	|                 |
+	|                 |
+	|                 |
+	|                 |
+	+-----------------+
+	| actual_th_fun() |
+	+-----------------+
+	|   wrapper()     | <--- stack pointer
+	|   exit()        |
+	+-----------------+
+	State of stack after qthread_create is called
+   #+END_VERSE
+
 **** setup_stack():
 pushes a fake stack to return to func(arg1, arg2);
 MOSTLY should push a wrapper function that exits after the thread is done
@@ -53,43 +85,3 @@ stored using a linked list as:
 1. it's inherently flexible and makes it easier to add/remove threads in o(1)
 2. variable size
 3. dynamic memory management
-
-
-
-#+begin_src ascii
-+---------------------+
-|                     |
-|                     |
-|                     |
-|                     |
-|                     |
-|                     |
-|                     |
-|                     |
-|                     |
-|                     |
-|                     |
-|                     |
-|                     |
-|                     |
-+---------------------+
-|                     |
-|                     |
-| actual_th_fun()     |
-|                     |
-| return()            |
-|                     |
-|                     |
-+---------------------+
-|                     |
-|     wrapper()       | <--------
-|     exit()          |     this is executed to call exit
-|                     |     on the thread
-+---------------------+
-#+END_SRC
-almost always should setup_stack with
-            a wrapper function that goes something like
-            func wrapper(){
-                int val = actual_th_func();
-                exit(val);
-            }

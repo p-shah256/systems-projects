@@ -11,6 +11,7 @@
 /* DECLARATIONS */
 /********************************************************************************/
 extern void *setup_stack(void *_stack, size_t len, f_2arg_t f, f_1arg_t f2, void *arg);
+extern void switch_thread(void **location_for_old_sp, void *new_value);
 
 /*
  * You'll probably want to define a thread queue structure, and
@@ -25,16 +26,24 @@ struct threadq
     qthread_t end;
     int size;
 };
+
 typedef struct threadq *threadq_t;
 void push_back(threadq_t queue, qthread_t thread);
-struct qthread pop_front(struct threadq *queue);
+qthread_t pop_front(struct threadq *queue);
 
 /* this is your qthread structure. */
-struct qthread {
+struct qthread
+{
     struct qthread* next;
     void *saved_stack_pointer;
 	// required later to free stack data in the heap
 	void *stack_low_pointer;
+	// to store return value
+	void *return_val;
+	// to signal dead
+	int dead;
+
+	long int timing_information;
 };
 
 /* I suggest factoring your code so that you have a 'schedule'
@@ -44,8 +53,11 @@ struct qthread {
  * NOTE - if you end up switching back to the same thread, do *NOT*
  * use do_switch - check for this case and return from schedule(),
  * or else @you'll crash.
+ *
+ * exit = 1 if qthread_exit
+ * exit = 0 if qthread_yeild
  */
-void schedule(void *save_location);
+void schedule(int exit);
 
 
 /****************************************************************************************/
@@ -87,8 +99,10 @@ qthread_t qthread_create(f_1arg_t f, void *arg1)
 	}
 	thread->saved_stack_pointer = sp;
 	thread->next = NULL;
+	thread->dead = 0;
 
-	// 3. TODO: make the thread runnable ++ add it to the queue
+	// 3. make it runnable
+	push_back(runnable_queue, thread);
 
 	return thread;
 }
@@ -117,9 +131,30 @@ void qthread_init(void)
  */
 void qthread_yield(void)
 {
+	schedule(0);
+}
 
 
-    /* your code here */
+void schedule(int exit)
+{
+	// if no threads remain either go to sleep or crash?
+	if (runnable_queue->size == 0) {
+		qthread_usleep(1000);
+		return;
+	}
+
+	qthread_t tmp = current_thread;
+	if (exit == 1) { // EXIT
+		/* free(current_thread); */
+	} else {         // YEILD
+		push_back(runnable_queue, current_thread);
+	}
+
+	// SWITCH
+	// TODO: should we check for sleeping threads here?
+	current_thread = pop_front(runnable_queue);
+	switch_thread(tmp->saved_stack_pointer, current_thread->saved_stack_pointer);
+	return;
 }
 
 /* qthread_exit, qthread_join - exit argument is returned by
@@ -128,11 +163,17 @@ void qthread_yield(void)
  */
 void qthread_exit(void *val)
 {
-    /* your code here */
+	current_thread->return_val = val;
+	current_thread->dead = 1;
+
+	schedule(1);
 }
 void *qthread_join(qthread_t thread)
 {
-    /* your code here */
+	while (thread->dead != 1) {
+		schedule(0);
+	}
+	return thread->return_val;
 }
 
 
@@ -155,7 +196,7 @@ void push_back(threadq_t queue, qthread_t thread)
 	printf("Enqueued thread %p\n",thread);
 }
 
-struct qthread pop_front(struct threadq *queue)
+qthread_t pop_front(struct threadq *queue)
 {
 	if(queue->size == 0){
 		perror("Empty queue to dequeue\n");
@@ -168,5 +209,5 @@ struct qthread pop_front(struct threadq *queue)
 	}
 	queue->front = new_head;
 	queue->size = queue -> size - 1;
-	return *head;
+	return head;
 }

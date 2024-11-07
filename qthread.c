@@ -85,6 +85,7 @@ void schedule();
 qthread_mutex_t *qthread_mutex_create(void)
 {
   struct qthread_mutex *mutex = malloc(sizeof(struct qthread_mutex));
+  mutex->flag = 0;
   return mutex;
 }
 
@@ -120,12 +121,17 @@ void qthread_mutex_unlock(qthread_mutex_t *mutex)
  */
 qthread_cond_t *qthread_cond_create(void)
 {
+    qthread_cond_t *cond = malloc(sizeof(qthread_cond_t));
+    return cond;
 }
 void qthread_cond_destroy(qthread_cond_t *cond)
 {
+  free(cond);
+  return;
 }
 void qthread_cond_wait(qthread_cond_t *cond, qthread_mutex_t *mutex)
 {
+
 }
 void qthread_cond_signal(qthread_cond_t *cond)
 {

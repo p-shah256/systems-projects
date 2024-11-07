@@ -58,28 +58,6 @@ struct qthread_cond
  */
 void schedule();
 
-
-
-/* qthread_yield - yield to the next @runnable thread.
- */
-/*void qthread_yield(void)
-{
-    /* your code here */
-//}
-
-/* qthread_exit, qthread_join - exit argument is returned by
- * qthread_join. Note that join blocks if the thread hasn't exited
- * yet, and is allowed to crash @if the thread doesn't exist.
- */
-/*void qthread_exit(void *val)
-{
-    /* your code here */
-//}
-//void *qthread_join(qthread_t thread)
-//{
-    /* your code here */
-//}
-
 /* Mutex functions
  */
 qthread_mutex_t *qthread_mutex_create(void)
@@ -129,15 +107,26 @@ void qthread_cond_destroy(qthread_cond_t *cond)
   free(cond);
   return;
 }
+
+//should add the thread in the mutex queue into the waiting condition variable queue
 void qthread_cond_wait(qthread_cond_t *cond, qthread_mutex_t *mutex)
 {
-
+    struct qthread tmp = pop_front(mutex->queue);
+    push_back(cond->queue,&tmp);
 }
+// condition signal should just pop the front of the queue of conditionals as its no longer waiting
 void qthread_cond_signal(qthread_cond_t *cond)
 {
+    struct qthread tmp = pop_front(cond->queue);
+    push_back(&active,&tmp);
 }
+//should tell all threads to 'wakeup' would pop entire queue, and place into active
 void qthread_cond_broadcast(qthread_cond_t *cond)
 {
+    while(!isEmpty(cond->queue)){
+      struct qthread tmp = pop_front(cond->queue);
+      push_back(&active,&tmp);
+    }
 }
 
 

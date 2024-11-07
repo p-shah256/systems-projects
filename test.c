@@ -104,6 +104,7 @@ void* run_test3(void* arg) {
     return arg;
 }
 
+//tests two threads running through a while loop that locks an operation
 void test3(void){
    mutex = qthread_mutex_create();
    cond = qthread_cond_create();

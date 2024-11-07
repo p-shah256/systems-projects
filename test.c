@@ -49,7 +49,47 @@ void test1(void)
     assert(!strcmp(val, "2"));
     val = qthread_join(t3[2]);
     assert(!strcmp(val, "3"));
-}    
+}
+
+void* run_test2(void* arg){
+  int i = 3;
+  while(i > 0){
+    i-=1;
+    qthread_yield();
+    printf("while loop pass %s\n", (char*)arg);
+  }
+  return arg;
+}
+void test2(void){
+    qthread_t t = qthread_create(run_test2, "a");
+    void *val = qthread_join(t);
+    assert(!strcmp(val, "a"));
+    qthread_t t2[3] = {qthread_create(run_test2, "b"),
+                        qthread_create(run_test2, "c"),
+                        qthread_create(run_test2, "a")};
+    val = qthread_join(t2[0]);
+    assert(!strcmp(val, "b"));
+    val = qthread_join(t2[1]);
+    assert(!strcmp(val, "c"));
+    val = qthread_join(t2[2]);
+    assert(!strcmp(val, "a"));
+
+    // test null void *, should return just e?
+    qthread_t t3[2] = {qthread_create(run_test2, "d"),
+    qthread_create(NULL, "e")};
+    val = qthread_join(t3[0]);
+    assert(!strcmp(val, "d"));
+    val = qthread_join(t3[1]);
+    assert(!strcmp(val, "e"));
+}
+
+void* run_test3(void* arg) {
+
+}
+
+void test3(void){
+
+}
     
 int main(int argc, char** argv)
 {

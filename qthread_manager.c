@@ -84,6 +84,7 @@ void create_thread_wrapper(f_1arg_t f, void *arg1)
 */
 qthread_t qthread_create(f_1arg_t f, void *arg1)
 {
+	printf("\nCREATE: creating...\n");
 	// 1. setup stack with wrapper function
 	void *stack = malloc(STACK_SIZE);
 	if (!stack) {
@@ -106,6 +107,7 @@ qthread_t qthread_create(f_1arg_t f, void *arg1)
 	// 3. make it runnable
 	push_back(runnable_queue, thread);
 
+	printf("CREATE: created \n");
 	return thread;
 }
 
@@ -123,9 +125,12 @@ void qthread_init(void)
 
 	// TODO: check out how to setup stack for this one
 	// create the RUNNABLE QUEUE and mark as active
+
+	printf("qthread system initialized \n");
 	runnable_queue = malloc(sizeof(struct threadq));
 	push_back(runnable_queue, thread);
 	current_thread = thread;
+	printf("THREAD %p : main thread enqueued \n", thread);
 }
 
 
@@ -133,6 +138,7 @@ void qthread_init(void)
  */
 void qthread_yield(void)
 {
+	printf("\nYEILD: yeilding.... \n");
 	schedule(0);
 }
 
@@ -145,18 +151,22 @@ void schedule(int exit)
 		return;
 	}
 
-	qthread_t tmp = current_thread;
+	printf("\nSCHEDULE: old current thread %p\n", current_thread);
+	qthread_t old_current = current_thread;
+	current_thread = pop_front(runnable_queue);
+	current_thread = pop_front(runnable_queue);
+	printf("SCHEDULE: new current thread %p\n", current_thread);
+
 	if (exit == 1) { // EXIT
 		/* free(current_thread); */
 	} else if (exit == 2) { // WAIT
 	    // do not push back the current thread
 	} else {         // YEILD
-		push_back(runnable_queue, current_thread);
+		push_back(runnable_queue, old_current);
 	}
 
-	// SWITCH
-	current_thread = pop_front(runnable_queue);
-	switch_thread(tmp->saved_stack_pointer, current_thread->saved_stack_pointer);
+	printf("SCHEDULE: all setup, switching from %p -> %p\n", old_current, current_thread);
+	switch_thread(&(old_current->saved_stack_pointer), (current_thread->saved_stack_pointer));
 	return;
 }
 
@@ -199,24 +209,36 @@ void qthread_usleep(long int usecs)
 /************************************************************************************************/
 void push_back(threadq_t queue, qthread_t thread)
 {
-	thread->next = queue->end;
-	queue->end = thread;
-	queue->size = queue->size + 1;
-	printf("Enqueued thread %p\n",thread);
+    thread->next = NULL;
+    // If queue is empty, both front and end should point to new thread
+    if (queue->size == 0) {
+        queue->front = thread;
+        queue->end = thread;
+    }
+    // Otherwise, update the current end node to point to new thread
+    else {
+        queue->end->next = thread;
+        queue->end = thread;
+    }
+    queue->size++;
+    printf("QUEUE: Pushed back thread %p\n", thread);
 }
 
 qthread_t pop_front(struct threadq *queue)
 {
-	if(queue->size == 0){
-		perror("Empty queue to dequeue\n");
-	}
-	qthread_t head = queue->front;
-	// iterate till you find new head
-	qthread_t new_head = queue->end;
-	while (new_head->next->next != NULL) {
-		new_head = new_head->next;
-	}
-	queue->front = new_head;
-	queue->size = queue -> size - 1;
-	return head;
+    // Check for empty queue
+    if(queue->size == 0) {
+		perror("cannot pop from an empty queue");
+		return NULL;
+    }
+    qthread_t head = queue->front;
+    queue->front = head->next;
+    queue->size--;
+
+    // If we just removed the last element, update end pointer
+    if (queue->size == 0) {
+        queue->end = NULL;
+    }
+
+    return head;
 }

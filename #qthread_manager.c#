@@ -19,7 +19,7 @@ extern void switch_thread(void **location_for_old_sp, void *new_value);
  * remove the oldest item from the head, makes removal a lot easier)
  *
  * this later comes to be the active queue, cond var and mutex queue
-*/
+ */
 struct threadq
 {
     qthread_t front;
@@ -124,6 +124,7 @@ void qthread_init(void)
 
 	// TODO: check out how to setup stack for this one
 	// create the RUNNABLE QUEUE and mark as active
+
 	printf("qthread system initialized \n");
 	runnable_queue = malloc(sizeof(struct threadq));
 	push_back(runnable_queue, thread);
@@ -148,6 +149,7 @@ void schedule(int exit)
 		qthread_usleep(1000);
 		return;
 	}
+
 	printf("\nSCHEDULE: old current thread %p\n", current_thread);
 	qthread_t old_current = current_thread;
 	current_thread = pop_front(runnable_queue);
@@ -234,5 +236,6 @@ qthread_t pop_front(struct threadq *queue)
 	if(queue->size == 0){
 	  queue->end = NULL;
 	}
+	
 	return head;
 }

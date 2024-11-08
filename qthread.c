@@ -24,14 +24,6 @@
  * see source files for additional details
  */
 extern void switch_thread(void **location_for_old_sp, void *new_value);
-// HINT: pushes a fake stack to return to func(arg1, arg2);
-//       MOSTLY should push a wrapper function that exits after the thread is done
-//       so that whenever we switch we execute the func
-//       F is the wrapper
-//       f2 is the function that should be called with arg =
-//       wrapper calls f2(arg)
-//       returns a stack pointer
-extern void *setup_stack(void *_stack, size_t len, f_2arg_t f, f_1arg_t f2, void *arg);
 
 /* Mutex and cond structures - @allocate them in qthread_mutex_create /
  * qthread_cond_create and free them in @the corresponding _destroy functions.
@@ -130,3 +122,14 @@ static long get_usecs(void)
     gettimeofday(&tv, NULL);
     return tv.tv_sec*1000000 + tv.tv_usec;
 }
+<<<<<<< HEAD
+=======
+
+/* POSIX replacement API. This semester we're only implementing 'usleep'
+ *
+ * If there are no runnable threads, your scheduler needs to wait,
+ * using one or more calls to the system usleep() function, until
+ * a thread blocked in 'qthread_usleep' is ready to wake up.
+ */
+
+>>>>>>> temp_charels

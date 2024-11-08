@@ -19,7 +19,7 @@ extern void switch_thread(void **location_for_old_sp, void *new_value);
  * remove the oldest item from the head, makes removal a lot easier)
  *
  * this later comes to be the active queue, cond var and mutex queue
-*/
+ */
 struct threadq
 {
     qthread_t front;
@@ -30,6 +30,7 @@ struct threadq
 typedef struct threadq *threadq_t;
 void push_back(threadq_t queue, qthread_t thread);
 qthread_t pop_front(struct threadq *queue);
+
 /* this is your qthread structure. */
 struct qthread
 {
@@ -70,7 +71,9 @@ qthread_t current_thread;
 // TODO: check types
 void create_thread_wrapper(f_1arg_t f, void *arg1)
 {
+	printf("\n%p THREAD WRAPPER: running thread\n", current_thread);
 	void *val = f(arg1);
+	printf("\n%p THREAD WRAPPER: exiting thread returning: %p (value: %s)\n", current_thread, val, (char*)val);
 	return qthread_exit(val);
 }
 
@@ -93,7 +96,8 @@ qthread_t qthread_create(f_1arg_t f, void *arg1)
 	void *sp = setup_stack(stack, STACK_SIZE, create_thread_wrapper, f, arg1);
 
 	// 2. create the actual thread
-	struct qthread *thread = malloc(sizeof(qthread_t));
+	/* struct qthread *thread = malloc(sizeof(qthread_t)); */
+	struct qthread *thread = malloc(sizeof(struct qthread));  // CORRECT!
 	if (!thread) {
 		perror("Failed to allocate memory for qthread in qthread_create");
 		exit(1);
@@ -102,8 +106,6 @@ qthread_t qthread_create(f_1arg_t f, void *arg1)
 	thread->next = NULL;
 	thread->dead = 0;
 	thread->waiter = NULL;
-
-	// 3. make it runnable
 	push_back(runnable_queue, thread);
 
 	printf("CREATE: created \n");
@@ -124,11 +126,10 @@ void qthread_init(void)
 
 	// TODO: check out how to setup stack for this one
 	// create the RUNNABLE QUEUE and mark as active
+
 	printf("qthread system initialized \n");
 	runnable_queue = malloc(sizeof(struct threadq));
-	push_back(runnable_queue, thread);
 	current_thread = thread;
-	printf("THREAD %p : main thread enqueued \n", thread);
 }
 
 
@@ -136,33 +137,31 @@ void qthread_init(void)
  */
 void qthread_yield(void)
 {
-	printf("\nYEILD: yeilding.... \n");
+	printf("\n%p YEILD: yeilding.... \n", current_thread);
 	schedule(0);
 }
 
 
 void schedule(int exit)
 {
+	printf("%p SCHEDULE: schedule called\n", current_thread);
+	qthread_t old_current = current_thread;
 	// if no threads remain either go to sleep or crash?
 	if (runnable_queue->size == 0) {
-		qthread_usleep(1000);
+		printf("%p SCHEDULE: queue size 0, not yeilding\n", current_thread);
 		return;
 	}
-	printf("\nSCHEDULE: old current thread %p\n", current_thread);
-	qthread_t old_current = current_thread;
-	current_thread = pop_front(runnable_queue);
-	current_thread = pop_front(runnable_queue);
-	printf("SCHEDULE: new current thread %p\n", current_thread);
-	
+
 	if (exit == 1) { // EXIT
-		/* free(current_thread); */
+		free(old_current);
 	} else if (exit == 2) { // WAIT
 	    // do not push back the current thread
 	} else {         // YEILD
 		push_back(runnable_queue, old_current);
 	}
 
-	printf("SCHEDULE: all setup, switching from %p -> %p\n", old_current, current_thread);
+	current_thread = pop_front(runnable_queue);
+	printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
 	switch_thread(&(old_current->saved_stack_pointer), (current_thread->saved_stack_pointer));
 	return;
 }
@@ -170,22 +169,28 @@ void schedule(int exit)
 /* qthread_exit, qthread_join - exit argument is returned by
  * qthread_join. Note that join blocks if the thread hasn't exited
  * yet, and is allowed to crash @if the thread doesn't exist.
+ * return;
  */
 void qthread_exit(void *val)
 {
+	printf("%p EXIT: exiting...\n", current_thread);
 	current_thread->return_val = val;
 	current_thread->dead = 1;
 	// wake up any sleeping threads -- add them to the runnable list
 	if (current_thread->waiter) {
+		printf("%p EXIT: waking up sleeping thread %p\n", current_thread, current_thread->waiter);
 		push_back(runnable_queue, current_thread->waiter);
 	}
 	schedule(1);
+	return;
 }
 
 void *qthread_join(qthread_t thread)
 {
+	printf("\n%p JOIN: is joining and waiting for %p\n", current_thread, thread);
+	thread->waiter = current_thread;
 	while (thread->dead != 1) {
-		thread->waiter = current_thread;
+		printf("%p JOIN: thread is not dead yet, putting to wait\n", current_thread);
 		// and take it off runnable list too
 		schedule(2); // 2= wait - does not put it into runnable_queue will be woken up by some other thread
 	}
@@ -217,22 +222,27 @@ void push_back(threadq_t queue, qthread_t thread)
         queue->end->next = thread;
         queue->end = thread;
     }
-    QUEUE->SIZE++;
-    PRINTF("QUEUE: PUSHED BACK THREAD %P\N", THREAD);
+    queue->size++;
+    printf("QUEUE: Pushed back thread %p\n", thread);
 }
 
 qthread_t pop_front(struct threadq *queue)
 {
-	if(queue->size == 0){
-		perror("Empty queue to dequeue\n");
+
+    printf("QUEUE: pop_front returning %p\n", queue->front);
+    // Check for empty queue
+    if(queue->size == 0) {
+		perror("cannot pop from an empty queue");
 		return NULL;
-	}
-	qthread_t head = queue->front;
-	// iterate till you find new head
-        queue->front = head->next;
-	queue->size--;
-	if(queue->size == 0){
-	  queue->end = NULL;
-	}
-	return head;
+    }
+    qthread_t head = queue->front;
+    queue->front = head->next;
+    queue->size--;
+
+    // If we just removed the last element, update end pointer
+    if (queue->size == 0) {
+        queue->end = NULL;
+    }
+
+    return head;
 }

@@ -93,7 +93,7 @@ void qthread_cond_destroy(qthread_cond_t *cond)
 //should add the thread in the mutex queue into the waiting condition variable queue
 void qthread_cond_wait(qthread_cond_t *cond, qthread_mutex_t *mutex)
 {
-    struct qthread tmp = *pop_front(mutex->queue);
+    struct qthread tmp = *pop_front(runnable_queue);
     push_back(cond->queue,&tmp);
 }
 // condition signal should just pop the front of the queue of conditionals as its no longer waiting
@@ -122,14 +122,4 @@ static long get_usecs(void)
     gettimeofday(&tv, NULL);
     return tv.tv_sec*1000000 + tv.tv_usec;
 }
-<<<<<<< HEAD
-=======
 
-/* POSIX replacement API. This semester we're only implementing 'usleep'
- *
- * If there are no runnable threads, your scheduler needs to wait,
- * using one or more calls to the system usleep() function, until
- * a thread blocked in 'qthread_usleep' is ready to wake up.
- */
-
->>>>>>> temp_charels

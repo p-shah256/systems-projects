@@ -217,8 +217,8 @@ void push_back(threadq_t queue, qthread_t thread)
         queue->end->next = thread;
         queue->end = thread;
     }
-    QUEUE->SIZE++;
-    PRINTF("QUEUE: PUSHED BACK THREAD %P\N", THREAD);
+    queue->size++;
+    printf("QUEUE: PUSHED BACK THREAD %p\N", thread);
 }
 
 qthread_t pop_front(struct threadq *queue)

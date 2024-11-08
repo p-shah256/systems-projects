@@ -42,8 +42,9 @@ struct qthread
 	void *return_val;
 	// to signal dead
 	int dead;
-
 	long int timing_information;
+	// for join
+	qthread_t waiter;
 };
 
 /* I suggest factoring your code so that you have a 'schedule'
@@ -100,6 +101,7 @@ qthread_t qthread_create(f_1arg_t f, void *arg1)
 	thread->saved_stack_pointer = sp;
 	thread->next = NULL;
 	thread->dead = 0;
+	thread->waiter = NULL;
 
 	// 3. make it runnable
 	push_back(runnable_queue, thread);
@@ -146,12 +148,13 @@ void schedule(int exit)
 	qthread_t tmp = current_thread;
 	if (exit == 1) { // EXIT
 		/* free(current_thread); */
+	} else if (exit == 2) { // WAIT
+	    // do not push back the current thread
 	} else {         // YEILD
 		push_back(runnable_queue, current_thread);
 	}
 
 	// SWITCH
-	// TODO: should we check for sleeping threads here?
 	current_thread = pop_front(runnable_queue);
 	switch_thread(tmp->saved_stack_pointer, current_thread->saved_stack_pointer);
 	return;
@@ -165,13 +168,19 @@ void qthread_exit(void *val)
 {
 	current_thread->return_val = val;
 	current_thread->dead = 1;
-
+	// wake up any sleeping threads -- add them to the runnable list
+	if (current_thread->waiter) {
+		push_back(runnable_queue, current_thread->waiter);
+	}
 	schedule(1);
 }
+
 void *qthread_join(qthread_t thread)
 {
 	while (thread->dead != 1) {
-		schedule(0);
+		thread->waiter = current_thread;
+		// and take it off runnable list too
+		schedule(2); // 2= wait - does not put it into runnable_queue will be woken up by some other thread
 	}
 	return thread->return_val;
 }

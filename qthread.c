@@ -56,7 +56,9 @@ struct qthread_cond
  * use do_switch - check for this case and return from schedule(),
  * or else @you'll crash.
  */
-void schedule();
+void schedule(){
+
+}
 
 /* Mutex functions
  */

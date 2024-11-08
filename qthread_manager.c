@@ -9,7 +9,7 @@
 #define STACK_SIZE 64*1024
 
 extern void *setup_stack(void *_stack, size_t len, f_2arg_t f, f_1arg_t f2, void *arg);
-
+extern void switch_thread(void **location_for_old_sp, void *new_value);
 //GLOBALS
 struct threadq active;
 struct qthread current;
@@ -136,7 +136,9 @@ void qthread_init(void)
  * use do_switch - check for this case and return from schedule(),
  * or else @you'll crash.
  */
-void schedule();
+void schedule(){
+
+}
 
 
 
@@ -162,10 +164,16 @@ void qthread_yield(void)
  */
 void qthread_exit(void *val)
 {
-	/* your code here */
+	struct qthread tmp = current;
+	push_back(&active,&current);
+	current = pop_front(&active);
+	switch_thread(&tmp.saved_stack_pointer, current.saved_stack_pointer);
+	if(isEmpty(&active)){
+		return;
+	}
 }
 void *qthread_join(qthread_t thread)
 {
-	/* your code here */
+
 }
 

@@ -96,7 +96,8 @@ qthread_t qthread_create(f_1arg_t f, void *arg1)
 	void *sp = setup_stack(stack, STACK_SIZE, create_thread_wrapper, f, arg1);
 
 	// 2. create the actual thread
-	struct qthread *thread = malloc(sizeof(qthread_t));
+	/* struct qthread *thread = malloc(sizeof(qthread_t)); */
+	struct qthread *thread = malloc(sizeof(struct qthread));  // CORRECT!
 	if (!thread) {
 		perror("Failed to allocate memory for qthread in qthread_create");
 		exit(1);
@@ -105,8 +106,6 @@ qthread_t qthread_create(f_1arg_t f, void *arg1)
 	thread->next = NULL;
 	thread->dead = 0;
 	thread->waiter = NULL;
-
-	// 3. make it runnable
 	push_back(runnable_queue, thread);
 
 	printf("CREATE: created \n");
@@ -130,9 +129,7 @@ void qthread_init(void)
 
 	printf("qthread system initialized \n");
 	runnable_queue = malloc(sizeof(struct threadq));
-	push_back(runnable_queue, thread);
 	current_thread = thread;
-	printf("THREAD %p : main thread enqueued \n", thread);
 }
 
 
@@ -156,7 +153,7 @@ void schedule(int exit)
 	}
 
 	if (exit == 1) { // EXIT
-		/* free(current_thread); */
+		free(old_current);
 	} else if (exit == 2) { // WAIT
 	    // do not push back the current thread
 	} else {         // YEILD
@@ -164,8 +161,7 @@ void schedule(int exit)
 	}
 
 	current_thread = pop_front(runnable_queue);
-	current_thread = pop_front(runnable_queue);
-	printf("%p SCHEDULE: all setup, switching from %p -> %p\n", current_thread, old_current, current_thread);
+	printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
 	switch_thread(&(old_current->saved_stack_pointer), (current_thread->saved_stack_pointer));
 	return;
 }
@@ -182,7 +178,7 @@ void qthread_exit(void *val)
 	current_thread->dead = 1;
 	// wake up any sleeping threads -- add them to the runnable list
 	if (current_thread->waiter) {
-		printf("%p EXIT: waiting up sleeping thread %p\n", current_thread, current_thread->waiter);
+		printf("%p EXIT: waking up sleeping thread %p\n", current_thread, current_thread->waiter);
 		push_back(runnable_queue, current_thread->waiter);
 	}
 	schedule(1);

@@ -3,6 +3,7 @@
 # file:    Makefile
 #
 LDLIBS = -lcheck -lsubunit
+CFLAGS = -g
 
 # default build rules:
 # .c to .o: $(CC) $(CFLAGS) file.c -c -o file.o
@@ -11,7 +12,7 @@ LDLIBS = -lcheck -lsubunit
 test: test.o qthread.o switch.o
 
 switch.o: switch.S
-	gcc -c switch.S -o switch.o
+	gcc -g -c switch.S -o switch.o
 
 clean:
 	rm -f *.o test

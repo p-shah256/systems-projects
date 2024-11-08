@@ -48,18 +48,6 @@ struct qthread_cond
     struct threadq *queue;
 };
 
-/* I suggest factoring your code so that you have a 'schedule'
- * function which selects the next thread to run and @switches to it,
- * or goes to sleep if there aren't any threads left to run.
- *
- * NOTE - if you end up switching back to the same thread, do *NOT*
- * use do_switch - check for this case and return from schedule(),
- * or else @you'll crash.
- */
-void schedule(){
-
-}
-
 /* Mutex functions
  */
 qthread_mutex_t *qthread_mutex_create(void)
@@ -83,13 +71,13 @@ void qthread_mutex_lock(qthread_mutex_t *mutex)
   }
   else{
     push_back(mutex->queue,&current);
-    schedule();
+    schedule(0);
   }
 }
 void qthread_mutex_unlock(qthread_mutex_t *mutex)
 {
   if(isEmpty(mutex->queue) == 1){
-    struct qthread tmp = pop_front(mutex->queue);
+    struct qthread tmp = *pop_front(mutex->queue);
     push_back(&active,&tmp);
   }
   else{
@@ -113,20 +101,20 @@ void qthread_cond_destroy(qthread_cond_t *cond)
 //should add the thread in the mutex queue into the waiting condition variable queue
 void qthread_cond_wait(qthread_cond_t *cond, qthread_mutex_t *mutex)
 {
-    struct qthread tmp = pop_front(mutex->queue);
+    struct qthread tmp = *pop_front(mutex->queue);
     push_back(cond->queue,&tmp);
 }
 // condition signal should just pop the front of the queue of conditionals as its no longer waiting
 void qthread_cond_signal(qthread_cond_t *cond)
 {
-    struct qthread tmp = pop_front(cond->queue);
+    struct qthread tmp = *pop_front(cond->queue);
     push_back(&active,&tmp);
 }
 //should tell all threads to 'wakeup' would pop entire queue, and place into active
 void qthread_cond_broadcast(qthread_cond_t *cond)
 {
     while(!isEmpty(cond->queue)){
-      struct qthread tmp = pop_front(cond->queue);
+      struct qthread tmp = *pop_front(cond->queue);
       push_back(&active,&tmp);
     }
 }

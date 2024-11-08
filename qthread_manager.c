@@ -14,15 +14,6 @@ extern void switch_thread(void **location_for_old_sp, void *new_value);
 struct threadq active;
 struct qthread current;
 //
-/* this is your qthread structure. */
-struct qthread {
-    struct qthread* next;
-    void *saved_stack_pointer;
-	// required later to free stack data in the heap
-	void *stack_low_pointer;
-};
-
-
 /*
  * You'll probably want to define a thread queue structure, and
  * functions to append and remove threads. (Note that you only need to
@@ -30,38 +21,44 @@ struct qthread {
  *
  * this later comes to be the active queue, cond var and mutex queue
  */
-struct threadq {
-    qthread_t front;
-    qthread_t end;
-    int size;
-	// pointers to functions
-    void (*push_back)(struct threadq *queue,struct qthread *thread);
-    struct qthread (*pop_front)(struct threadq *queue);
+struct threadq
+{
+	qthread_t front;
+	qthread_t end;
+	int size;
 };
 
-void push_back(struct threadq *queue,struct qthread *thread)
-{
-	thread->next = queue->end;
-	queue->end = thread;
-	queue->size = queue->size + 1;
-	printf("Enqueued thread %p\n",thread);
-}
+typedef struct threadq *threadq_t;
+void push_back(threadq_t queue, qthread_t thread);
+qthread_t pop_front(struct threadq *queue);
 
-struct qthread pop_front(struct threadq *queue)
+/* this is your qthread structure. */
+struct qthread
 {
-	if(queue->size == 0){
-		perror("Empty queue to dequeue\n");
-	}
-	qthread_t head = queue->front;
-	// iterate till you find new head
-	qthread_t new_head = queue->end;
-	while (new_head->next->next != NULL) {
-		new_head = new_head->next;
-	}
-	queue->front = new_head;
-	queue->size = queue -> size - 1;
-	return *head;
-}
+	struct qthread* next;
+	void *saved_stack_pointer;
+	// required later to free stack data in the heap
+	void *stack_low_pointer;
+	// to store return value
+	void *return_val;
+	// to signal dead
+	int dead;
+
+	long int timing_information;
+};
+
+/* I suggest factoring your code so that you have a 'schedule'
+ * function which selects the next thread to run and @switches to it,
+ * or goes to sleep if there aren't any threads left to run.
+ *
+ * NOTE - if you end up switching back to the same thread, do *NOT*
+ * use do_switch - check for this case and return from schedule(),
+ * or else @you'll crash.
+ *
+ * exit = 1 if qthread_exit
+ * exit = 0 if qthread_yeild
+ */
+void schedule(int exit);
 
 int isEmpty(struct threadq* q) {
 	if(q->front == q->end && q->end == NULL) {
@@ -69,6 +66,12 @@ int isEmpty(struct threadq* q) {
 	}
 	return 0;
 }
+/****************************************************************************************/
+/* THREAD AND ITS OPERATIONS */
+/****************************************************************************************/
+
+threadq_t runnable_queue;
+qthread_t current_thread;
 
 /**********/
 /* CREATE */
@@ -105,8 +108,10 @@ qthread_t qthread_create(f_1arg_t f, void *arg1)
 	}
 	thread->saved_stack_pointer = sp;
 	thread->next = NULL;
+	thread->dead = 0;
 
-	// 3. TODO: make the thread runnable ++ add it to the queue
+	// 3. make it runnable
+	push_back(runnable_queue, thread);
 
 	return thread;
 }
@@ -117,15 +122,17 @@ void qthread_init(void)
 {
 	// create a thread for the main running thread and set it as active
 	// QUESTION: how to deal with the stack pointer here
-	struct qthread *thread = malloc(sizeof(qthread_t));
+	qthread_t thread = malloc(sizeof(struct qthread));
 	if (!thread) {
 		perror("Failed to allocate memory for qthread in qthread_init");
 		exit(1);
 	}
 
-	// create the RUNNABLE QUEUE
-	struct threadq *runnable_queue = malloc(sizeof(struct threadq));
-	/* runnable_queue->push_back(t) */
+	// TODO: check out how to setup stack for this one
+	// create the RUNNABLE QUEUE and mark as active
+	runnable_queue = malloc(sizeof(struct threadq));
+	push_back(runnable_queue, thread);
+	current_thread = thread;
 }
 
 /* I suggest factoring your code so that you have a 'schedule'
@@ -136,8 +143,26 @@ void qthread_init(void)
  * use do_switch - check for this case and return from schedule(),
  * or else @you'll crash.
  */
-void schedule(){
+void schedule(int exit)
+{
+	// if no threads remain either go to sleep or crash?
+	if (runnable_queue->size == 0) {
+		qthread_usleep(1000);
+		return;
+	}
 
+	qthread_t tmp = current_thread;
+	if (exit == 1) { // EXIT
+		/* free(current_thread); */
+	} else {         // YEILD
+		push_back(runnable_queue, current_thread);
+	}
+
+	// SWITCH
+	// TODO: should we check for sleeping threads here?
+	current_thread = pop_front(runnable_queue);
+	switch_thread(tmp->saved_stack_pointer, current_thread->saved_stack_pointer);
+	return;
 }
 
 
@@ -153,8 +178,8 @@ void qthread_yield(void)
     //logic here
     struct qthread tmp = current;
 	push_back(&active,&current);
-    current = pop_front(&active);
-    schedule();
+    current = *pop_front(&active);
+    schedule(0);
   }
 }
 
@@ -164,16 +189,43 @@ void qthread_yield(void)
  */
 void qthread_exit(void *val)
 {
-	struct qthread tmp = current;
-	push_back(&active,&current);
-	current = pop_front(&active);
-	switch_thread(&tmp.saved_stack_pointer, current.saved_stack_pointer);
-	if(isEmpty(&active)){
-		return;
-	}
+	current_thread->return_val = val;
+	current_thread->dead = 1;
+
+	schedule(1);
 }
 void *qthread_join(qthread_t thread)
 {
+	while (thread->dead != 1) {
+		schedule(0);
+	}
+	return thread->return_val;
+}
 
+/************************************************************************************************/
+/* QUEUE AND OPERATIONS */
+/************************************************************************************************/
+void push_back(threadq_t queue, qthread_t thread)
+{
+	thread->next = queue->end;
+	queue->end = thread;
+	queue->size = queue->size + 1;
+	printf("Enqueued thread %p\n",thread);
+}
+
+qthread_t pop_front(struct threadq *queue)
+{
+	if(queue->size == 0){
+		perror("Empty queue to dequeue\n");
+	}
+	qthread_t head = queue->front;
+	// iterate till you find new head
+	qthread_t new_head = queue->end;
+	while (new_head->next->next != NULL) {
+		new_head = new_head->next;
+	}
+	queue->front = new_head;
+	queue->size = queue -> size - 1;
+	return head;
 }
 

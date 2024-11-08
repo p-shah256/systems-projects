@@ -30,7 +30,6 @@ struct threadq
 typedef struct threadq *threadq_t;
 void push_back(threadq_t queue, qthread_t thread);
 qthread_t pop_front(struct threadq *queue);
-
 /* this is your qthread structure. */
 struct qthread
 {

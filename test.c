@@ -286,5 +286,7 @@ void test9(void){
 int main(int argc, char** argv)
 {
     qthread_init();
-    test1();
+    //test1();
+    // test2();
+    test3();
 }

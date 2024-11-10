@@ -17,6 +17,10 @@
 #include "qthread.h"
 #include "qthread_manager.c"
 
+
+threadq_t runnable_queue;
+qthread_t current_thread;
+
 //Working with up to 4 threads, will be at most using 3
 #define NUM_THREADS 4
 #define STACK_SIZE 64*1024
@@ -49,67 +53,67 @@ qthread_mutex_t *qthread_mutex_create(void)
   return mutex;
 }
 
-void qthread_mutex_destroy(qthread_mutex_t *mutex)
-{
-  free(mutex);
-  return;
-}
+/* void qthread_mutex_destroy(qthread_mutex_t *mutex) */
+/* { */
+/*   free(mutex); */
+/*   return; */
+/* } */
 
-void qthread_mutex_lock(qthread_mutex_t *mutex)
-{
-  if(!mutex->flag == 1){
-    mutex->flag = 1;
-    return;
-  }
-  else{
-    push_back(mutex->queue,&current);
-    schedule();
-  }
-}
-void qthread_mutex_unlock(qthread_mutex_t *mutex)
-{
-  if(isEmpty(mutex->queue) == 1){
-    struct qthread tmp = pop_front(mutex->queue);
-    push_back(&active,&tmp);
-  }
-  else{
-    return;
-  }
-}
+/* void qthread_mutex_lock(qthread_mutex_t *mutex) */
+/* { */
+/*   if(!mutex->flag == 1){ */
+/*     mutex->flag = 1; */
+/*     return; */
+/*   } */
+/*   else{ */
+/*     push_back(mutex->queue,&current_thread); */
+/*     schedule(); */
+/*   } */
+/* } */
+/* void qthread_mutex_unlock(qthread_mutex_t *mutex) */
+/* { */
+/*   if(isEmpty(mutex->queue) == 1){ */
+/*     struct qthread tmp = pop_front(mutex->queue); */
+/*     push_back(&runnable_queue,&tmp); */
+/*   } */
+/*   else{ */
+/*     return; */
+/*   } */
+/* } */
 
-/* Condition variable functions
- */
-qthread_cond_t *qthread_cond_create(void)
-{
-    qthread_cond_t *cond = malloc(sizeof(qthread_cond_t));
-    return cond;
-}
-void qthread_cond_destroy(qthread_cond_t *cond)
-{
-  free(cond);
-  return;
-}
+/* /\* Condition variable functions */
+/*  *\/ */
+/* qthread_cond_t *qthread_cond_create(void) */
+/* { */
+/*     qthread_cond_t *cond = malloc(sizeof(qthread_cond_t)); */
+/*     return cond; */
+/* } */
+/* void qthread_cond_destroy(qthread_cond_t *cond) */
+/* { */
+/*   free(cond); */
+/*   return; */
+/* } */
 
-//should add the thread in the mutex queue into the waiting condition variable queue
-void qthread_cond_wait(qthread_cond_t *cond, qthread_mutex_t *mutex)
-{
-    struct qthread tmp = pop_front(mutex->queue);
-    push_back(cond->queue,&tmp);
-}
-// condition signal should just pop the front of the queue of conditionals as its no longer waiting
-void qthread_cond_signal(qthread_cond_t *cond)
-{
-    struct qthread tmp = pop_front(cond->queue);
-    push_back(&active,&tmp);
-}
-//should tell all threads to 'wakeup' would pop entire queue, and place into active
-void qthread_cond_broadcast(qthread_cond_t *cond)
-{
-    while(!isEmpty(cond->queue)){
-      struct qthread tmp = pop_front(cond->queue);
-      push_back(&active,&tmp);
-    }
-}
+/* //should add the thread in the mutex queue into the waiting condition variable queue */
+/* void qthread_cond_wait(qthread_cond_t *cond, qthread_mutex_t *mutex) */
+/* { */
+/*     struct qthread tmp = pop_front(mutex->queue); */
+/*     push_back(cond->queue,&tmp); */
+/* } */
+/* // condition signal should just pop the front of the queue of conditionals as its no longer waiting */
+/* void qthread_cond_signal(qthread_cond_t *cond) */
+/* { */
+/*     struct qthread tmp = pop_front(cond->queue); */
+/*     push_back(&runnable_queue,&tmp); */
+/* } */
+/* //should tell all threads to 'wakeup' would pop entire queue, and place into runnable_queue */
+/* void qthread_cond_broadcast(qthread_cond_t *cond) */
+/* { */
+/*     while(!isEmpty(cond->queue)){ */
+/*       struct qthread tmp = pop_front(cond->queue); */
+/*       push_back(&runnable_queue,&tmp); */
+/*     } */
+/* } */
 
 
 /* Helper function for POSIX replacement API - you'll need to tell

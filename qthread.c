@@ -57,7 +57,7 @@ void qthread_mutex_destroy(qthread_mutex_t *mutex)
 
 void qthread_mutex_lock(qthread_mutex_t *mutex)
 {
-  if(!mutex->locked == 0){
+  if(!mutex->locked == 1){
     mutex->locked = 0;
     return;
   }

@@ -115,15 +115,28 @@ void qthread_cond_wait(qthread_cond_t *cond, qthread_mutex_t *mutex)
 // condition signal should just pop the front of the queue of conditionals as its no longer waiting
 void qthread_cond_signal(qthread_cond_t *cond)
 {
-    struct qthread tmp = *pop_front(cond->queue);
-    push_back(runnable_queue,&tmp);
+  //ensures conditional is not null or empty, to avoid seg fault
+    if(cond->queue != NULL && cond->queue->size > 0){
+      //pops from conditional queue, to 'wake up' waiting thread
+      struct qthread *tmp = pop_front(cond->queue);
+      //adds the thread to the queue of actives
+      push_back(runnable_queue,tmp);
+    }
+    //switches threads when woken up.
+    schedule(2);
 }
 //should tell all threads to 'wakeup' would pop entire queue, and place into active
 void qthread_cond_broadcast(qthread_cond_t *cond)
 {
+  //go through the whole of waiting threads, and adds them to active
     while(cond->queue->size > 0){
-      struct qthread tmp = *pop_front(cond->queue);
-      push_back(runnable_queue,&tmp);
+      if(cond->queue != NULL && cond->queue->size > 0){
+        //pops from conditional queue, to 'wake up' waiting thread
+        struct qthread *tmp = pop_front(cond->queue);
+        //adds the thread to the queue of actives
+        push_back(runnable_queue,tmp);
+      }
+      schedule(2);
     }
 }
 

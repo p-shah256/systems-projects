@@ -115,10 +115,178 @@ void test3(void){
    val = qthread_join(t2);
    assert(!strcmp(val, "b"));
    qthread_mutex_destroy(mutex);
+   qthread_cond_destroy(cond);
 }
-    
+
+void* run_test4(void* arg){
+  qthread_mutex_lock(mutex);
+  printf("locking thread %s\n", (char*)arg);
+  return arg;
+}
+//tests for locking a thread
+void test4(void){
+  mutex = qthread_mutex_create();
+  //cond = qthread_cond_create();
+  qthread_t t = qthread_create(run_test4, "a");
+  void* val = qthread_join(t);
+  assert(!strcmp(val, "a"));
+}
+//tests lock and unlock for two threads
+void* run_test5(void *arg){
+  qthread_mutex_lock(mutex);
+  printf("locking thread %s\n", (char*)arg);
+  qthread_mutex_unlock(mutex);
+  printf("unlocking thread %s\n", (char*)arg);
+  return arg;
+}
+void test5(void){
+  mutex = qthread_mutex_create();
+  qthread_t t[2] = {qthread_create(run_test5, "b"),
+                     qthread_create(run_test5, "c")};
+  void* val = qthread_join(t[0]);
+  assert(!strcmp(val, "b"));
+  val = qthread_join(t[1]);
+  assert(!strcmp(val, "c"));
+  qthread_mutex_destroy(mutex);
+
+}
+//test 3 threads locking and unlcoking
+void* run_test6(void* arg){
+  int i = 3;
+  qthread_mutex_lock(mutex);
+  printf("locking thread %s\n", (char*)arg);
+  while(i > 0){
+      i--;
+      printf("while loop pass %s\n", (char*)arg);
+      printf("value of i is %d\n", i);
+  }
+  printf("unlocking thread %s\n", (char*)arg);
+  qthread_mutex_unlock(mutex);
+  return arg;
+}
+void test6(void){
+    mutex = qthread_mutex_create();
+    qthread_t t[3] = {qthread_create(run_test6, "a"),
+    qthread_create(run_test6, "b"),
+    qthread_create(run_test6, "c")};
+    void *val = qthread_join(t[0]);
+    assert(!strcmp(val, "a"));
+    val = qthread_join(t[1]);
+    assert(!strcmp(val, "b"));
+    val = qthread_join(t[2]);
+    assert(!strcmp(val, "c"));
+    qthread_mutex_destroy(mutex);
+    qthread_cond_destroy(cond);
+}
+//test three threads with Condition Variable, waiting and signaling
+void* run_test7(void* arg){
+    int i = 0;
+    qthread_mutex_lock(mutex);
+    printf("locking thread %s\n", (char*)arg);
+    while(i < 3){
+        i++;
+        printf("while loop pass %s , %d\n", (char*)arg,i);
+        printf("waiting thread %s\n", (char*)arg);
+        qthread_cond_wait(cond,mutex);
+    }
+    printf("signaling thread %s\n", (char*)arg);
+    qthread_cond_signal(cond);
+    printf("unlocking thread %s\n", (char*)arg);
+    qthread_mutex_unlock(mutex);
+    return arg;
+}
+void test7(void){
+  mutex = qthread_mutex_create();
+  cond = qthread_cond_create();
+  qthread_t t[3] = {qthread_create(run_test7, "a"),
+  qthread_create(run_test7, "b"),
+  qthread_create(run_test7, "c")};
+  void *val = qthread_join(t[0]);
+  assert(!strcmp(val, "c"));
+  val = qthread_join(t[1]);
+  assert(!strcmp(val, "b"));
+  val = qthread_join(t[2]);
+  assert(!strcmp(val, "a"));
+  qthread_mutex_destroy(mutex);
+  qthread_cond_destroy(cond);
+}
+//tests three threads and wakes them all up at once
+void* run_test8(void* arg){
+    int i = 0;
+    qthread_mutex_lock(mutex);
+    printf("locking thread %s\n", (char*)arg);
+    while(i < 3){
+        i++;
+        printf("while loop pass %s , %d\n", (char*)arg,i);
+        printf("waiting thread %s\n", (char*)arg);
+        qthread_cond_wait(cond,mutex);
+    }
+    printf("signaling thread %s\n", (char*)arg);
+    qthread_cond_broadcast(cond);
+    printf("unlocking thread %s\n", (char*)arg);
+    qthread_mutex_unlock(mutex);
+    return arg;
+}
+void test8(void){
+    mutex = qthread_mutex_create();
+    cond = qthread_cond_create();
+    qthread_t t[3] = {qthread_create(run_test8, "a"),
+    qthread_create(run_test8, "b"),
+    qthread_create(run_test8, "c")};
+    void *val = qthread_join(t[0]);
+    assert(!strcmp(val, "a"));
+    val = qthread_join(t[1]);
+    assert(!strcmp(val, "b"));
+    val = qthread_join(t[2]);
+    assert(!strcmp(val, "c"));
+    qthread_mutex_destroy(mutex);
+    qthread_cond_destroy(cond);
+}
+// runs condition wait and signal twice for the threads
+void* run_test9(void* arg){
+    int i = 0;
+    qthread_mutex_lock(mutex);
+    printf("locking thread %s\n", (char*)arg);
+    while(i < 3){
+        i++;
+        printf("while loop pass %s , %d\n", (char*)arg,i);
+        printf("waiting thread %s\n", (char*)arg);
+        qthread_cond_wait(cond,mutex);
+    }
+    printf("signaling thread %s\n", (char*)arg);
+    qthread_cond_signal(cond);
+    i = 0;
+    while(i < 3){
+        i++;
+        printf("while loop 2 pass %s , %d\n", (char*)arg,i);
+        printf("waiting 2 thread %s\n", (char*)arg);
+        qthread_cond_wait(cond,mutex);
+    }
+    printf("signaling 2 thread %s\n", (char*)arg);
+    qthread_cond_signal(cond);
+    printf("unlocking thread %s\n", (char*)arg);
+    qthread_mutex_unlock(mutex);
+    return arg;
+}
+void test9(void){
+    mutex = qthread_mutex_create();
+    cond = qthread_cond_create();
+    qthread_t t[3] = {qthread_create(run_test9, "a"),
+    qthread_create(run_test9, "b"),
+    qthread_create(run_test9, "c")};
+    void *val = qthread_join(t[0]);
+    assert(!strcmp(val, "a"));
+    val = qthread_join(t[1]);
+    assert(!strcmp(val, "b"));
+    val = qthread_join(t[2]);
+    assert(!strcmp(val, "c"));
+    qthread_mutex_destroy(mutex);
+    qthread_cond_destroy(cond);
+}
 int main(int argc, char** argv)
 {
     qthread_init();
-    test1();
+    //test1();
+    // test2();
+    test7();
 }

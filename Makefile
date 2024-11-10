@@ -9,7 +9,7 @@ CFLAGS = -g
 # .c to .o: $(CC) $(CFLAGS) file.c -c -o file.o
 # multiple .o to exe. : $(CC) $(LDFLAGS) file.o [file.o..] $(LDLIBS) -o exe
 
-test: test.o qthread.o qthread_manager.o switch.o
+test: test.o qthread.o switch.o
 
 switch.o: switch.S
 	gcc -g -c switch.S -o switch.o

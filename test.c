@@ -124,7 +124,7 @@ void* run_test4(void* arg){
   return arg;
 }
 //tests for locking a thread
-void test4(void *arg){
+void test4(void){
   mutex = qthread_mutex_create();
   //cond = qthread_cond_create();
   qthread_t t = qthread_create(run_test4, "a");
@@ -288,5 +288,5 @@ int main(int argc, char** argv)
     qthread_init();
     //test1();
     // test2();
-    test3();
+    test5();
 }

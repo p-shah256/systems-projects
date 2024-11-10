@@ -68,9 +68,11 @@ void qthread_mutex_lock(qthread_mutex_t *mutex)
 }
 void qthread_mutex_unlock(qthread_mutex_t *mutex)
 {
-  if(mutex->queue->size > 0){
-    struct qthread tmp = *pop_front(mutex->queue);
-    push_back(runnable_queue,&tmp);
+  if(mutex->queue != NULL && mutex->queue->size > 0){
+    struct qthread *tmp = pop_front(mutex->queue);
+    if(tmp != NULL){
+    	push_back(runnable_queue,&tmp);
+    }
   }
   else{
     mutex->locked = 1;

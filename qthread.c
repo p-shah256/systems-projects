@@ -39,8 +39,8 @@ struct qthread_cond
     /* conditional variables is a queue of thread structures */;
     struct threadq *queue;
 };
-typedef struct qthread_mutex *qthread_mutex_t;
-typedef struct qthread_cond *qthread_cond_t;
+typedef struct qthread_mutex qthread_mutex_t;
+typedef struct qthread_cond qthread_cond_t;
 /* Mutex functions
  */
 qthread_mutex_t *qthread_mutex_create(void)
@@ -87,7 +87,7 @@ void qthread_mutex_unlock(qthread_mutex_t *mutex)
  */
 qthread_cond_t *qthread_cond_create(void)
 {
-    qthread_cond_t *cond = malloc(sizeof(struct qthread_cond);
+    qthread_cond_t *cond = malloc(sizeof(struct qthread_cond));
     cond->queue = malloc(sizeof(struct threadq));
     cond->queue->size = 0;
     return cond;

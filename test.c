@@ -202,11 +202,11 @@ void test7(void){
   qthread_create(run_test7, "b"),
   qthread_create(run_test7, "c")};
   void *val = qthread_join(t[0]);
-  assert(!strcmp(val, "a"));
+  assert(!strcmp(val, "c"));
   val = qthread_join(t[1]);
   assert(!strcmp(val, "b"));
   val = qthread_join(t[2]);
-  assert(!strcmp(val, "c"));
+  assert(!strcmp(val, "a"));
   qthread_mutex_destroy(mutex);
   qthread_cond_destroy(cond);
 }

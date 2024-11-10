@@ -24,14 +24,6 @@
  * see source files for additional details
  */
 extern void switch_thread(void **location_for_old_sp, void *new_value);
-// HINT: pushes a fake stack to return to func(arg1, arg2);
-//       MOSTLY should push a wrapper function that exits after the thread is done
-//       so that whenever we switch we execute the func
-//       F is the wrapper
-//       f2 is the function that should be called with arg =
-//       wrapper calls f2(arg)
-//       returns a stack pointer
-extern void *setup_stack(void *_stack, size_t len, f_2arg_t f, f_1arg_t f2, void *arg);
 
 /* Mutex and cond structures - @allocate them in qthread_mutex_create /
  * qthread_cond_create and free them in @the corresponding _destroy functions.
@@ -47,16 +39,6 @@ struct qthread_cond
     /* conditional variables is a queue of thread structures */;
     struct threadq *queue;
 };
-
-/* I suggest factoring your code so that you have a 'schedule'
- * function which selects the next thread to run and @switches to it,
- * or goes to sleep if there aren't any threads left to run.
- *
- * NOTE - if you end up switching back to the same thread, do *NOT*
- * use do_switch - check for this case and return from schedule(),
- * or else @you'll crash.
- */
-void schedule();
 
 /* Mutex functions
  */
@@ -148,10 +130,3 @@ static long get_usecs(void)
  * a thread blocked in 'qthread_usleep' is ready to wake up.
  */
 
-
-/* qthread_usleep - yield to next runnable thread, making arrangements
- * to be put back on the active list after 'usecs' timeout.
- */
-void qthread_usleep(long int usecs)
-{
-}

@@ -97,13 +97,19 @@ void qthread_cond_destroy(qthread_cond_t *cond)
 void qthread_cond_wait(qthread_cond_t *cond, qthread_mutex_t *mutex)
 {
   //unlocks mutex
-    mutex->locked = 1;
+    qthread_mutex_unlock(mutex);
+    printf("qthread_cond_wait, unlocking for next thread to run while this thread waits\n");
     //pops thread of the queue in mutex
-    struct qthread tmp = *pop_front(mutex->queue);
+    struct qthread *tmp = pop_front(mutex->queue);
+    if(tmp != NULL){
+      push_back(cond->queue,tmp);
+    }
     //adds thread to conditional variable
-    push_back(cond->queue,&tmp);
+    push_back(cond->queue,tmp);
     //switch to next active thread
     schedule(2);
+    //locks after switching thread
+    qthread_mutex_lock(mutex);
 
 }
 // condition signal should just pop the front of the queue of conditionals as its no longer waiting

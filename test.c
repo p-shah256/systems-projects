@@ -288,5 +288,5 @@ int main(int argc, char** argv)
     qthread_init();
     //test1();
     // test2();
-    test5();
+    test7();
 }

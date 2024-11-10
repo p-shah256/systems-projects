@@ -12,6 +12,7 @@
 /********************************************************************************/
 extern void *setup_stack(void *_stack, size_t len, f_2arg_t f, f_1arg_t f2, void *arg);
 extern void switch_thread(void **location_for_old_sp, void *new_value);
+static long get_usecs(void);
 
 /*
  * You'll probably want to define a thread queue structure, and
@@ -55,8 +56,13 @@ struct qthread
  * use do_switch - check for this case and return from schedule(),
  * or else @you'll crash.
  *
- * exit = 1 if qthread_exit
- * exit = 0 if qthread_yeild
+ * exit = 0 if yeild
+ *
+ * exit = 1 if exit
+ *
+ * exit = 2 if wait/join
+ *
+ * exit = 3 if sleep
  */
 void schedule(int exit);
 
@@ -67,6 +73,7 @@ void schedule(int exit);
 
 threadq_t runnable_queue;
 qthread_t current_thread;
+threadq_t sleeping_set;
 
 // TODO: check types
 void create_thread_wrapper(f_1arg_t f, void *arg1)
@@ -129,6 +136,7 @@ void qthread_init(void)
 
 	printf("qthread system initialized \n");
 	runnable_queue = malloc(sizeof(struct threadq));
+	sleeping_set = malloc(sizeof(struct threadq));
 	current_thread = thread;
 }
 
@@ -146,9 +154,23 @@ void schedule(int exit)
 {
 	printf("%p SCHEDULE: schedule called\n", current_thread);
 	qthread_t old_current = current_thread;
-	// if no threads remain either go to sleep or crash?
+	// EXECUTES only when no threads remain
 	if (runnable_queue->size == 0) {
-		printf("%p SCHEDULE: queue size 0, not yeilding\n", current_thread);
+		printf("%p SCHEDULE: queue size 0, checking for sleeping set\n", current_thread);
+		if (sleeping_set->size > 0) {
+			printf("%p SCHEDULE: sleeping threads present %d\n", current_thread, sleeping_set->size);
+			qthread_t head = pop_front(sleeping_set);
+			// TODO: what if no sleeping threads can be woken up? keep running this while loop?
+			while (head->timing_information > get_usecs()) {
+				if (head->next) {
+					qthread_t tmp = head->next;
+					push_back(sleeping_set, head);
+					head = tmp;
+				}
+			}
+			// make head runnable
+			push_back(runnable_queue, head);
+		}
 		return;
 	}
 
@@ -156,7 +178,10 @@ void schedule(int exit)
 		free(old_current);
 	} else if (exit == 2) { // WAIT
 	    // do not push back the current thread
-	} else {         // YEILD
+	} else if (exit == 3) { // SLEEP
+		// move it into sleeping set
+		push_back(sleeping_set, old_current);
+	} else {                // YEILD
 		push_back(runnable_queue, old_current);
 	}
 
@@ -203,6 +228,8 @@ void *qthread_join(qthread_t thread)
  */
 void qthread_usleep(long int usecs)
 {
+	current_thread->timing_information = get_usecs() + usecs;
+	schedule(3);
 }
 
 

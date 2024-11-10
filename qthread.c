@@ -39,13 +39,16 @@ struct qthread_cond
     /* conditional variables is a queue of thread structures */;
     struct threadq *queue;
 };
-
+typedef struct qthread_mutex *qthread_mutex_t;
+typedef struct qthread_cond *qthread_cond_t;
 /* Mutex functions
  */
 qthread_mutex_t *qthread_mutex_create(void)
 {
   struct qthread_mutex *mutex = malloc(sizeof(struct qthread_mutex));
-  mutex->locked = 1;
+  mutex->locked = 0;
+  mutex->queue = malloc(sizeof(struct threadq));
+  mutex->queue->size = 0;
   return mutex;
 }
 
@@ -57,8 +60,8 @@ void qthread_mutex_destroy(qthread_mutex_t *mutex)
 
 void qthread_mutex_lock(qthread_mutex_t *mutex)
 {
-  if(!mutex->locked == 1){
-    mutex->locked = 0;
+  if(mutex->locked == 0){
+    mutex->locked = 1;
     return;
   }
   else{
@@ -75,7 +78,7 @@ void qthread_mutex_unlock(qthread_mutex_t *mutex)
     }
   }
   else{
-    mutex->locked = 1;
+    mutex->locked = 0;
     return;
   }
 }
@@ -84,7 +87,9 @@ void qthread_mutex_unlock(qthread_mutex_t *mutex)
  */
 qthread_cond_t *qthread_cond_create(void)
 {
-    qthread_cond_t *cond = malloc(sizeof(qthread_cond_t));
+    qthread_cond_t *cond = malloc(sizeof(struct qthread_cond);
+    cond->queue = malloc(sizeof(struct threadq));
+    cond->queue->size = 0;
     return cond;
 }
 void qthread_cond_destroy(qthread_cond_t *cond)
@@ -99,18 +104,13 @@ void qthread_cond_wait(qthread_cond_t *cond, qthread_mutex_t *mutex)
   //unlocks mutex
     qthread_mutex_unlock(mutex);
     printf("qthread_cond_wait, unlocking for next thread to run while this thread waits\n");
+    
     //pops thread of the queue in mutex
-    struct qthread *tmp = pop_front(mutex->queue);
-    if(tmp != NULL){
-      push_back(cond->queue,tmp);
-    }
+    struct qthread tmp = *current_thread;
     //adds thread to conditional variable
-    push_back(cond->queue,tmp);
+    push_back(cond->queue,&tmp);
     //switch to next active thread
     schedule(2);
-    //locks after switching thread
-    qthread_mutex_lock(mutex);
-
 }
 // condition signal should just pop the front of the queue of conditionals as its no longer waiting
 void qthread_cond_signal(qthread_cond_t *cond)

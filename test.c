@@ -398,6 +398,61 @@ void test_join_sleep(void) {
     qthread_join(t2);
 }
 
+
+qthread_mutex_t* mutex;
+qthread_cond_t* cond;
+
+void* run_thread1(void* arg) {
+    qthread_mutex_lock(mutex);
+	// does some work
+    printf("Thread 1: 1 2 3\n");
+	// assume pipe is full
+    qthread_cond_wait(cond, mutex);
+
+	// woken up here
+    printf("Thread 1: Queue emptied\n");
+    printf("Thread 1: 5 6\n");
+    qthread_cond_signal(cond);
+    qthread_mutex_unlock(mutex);
+    return NULL;
+}
+
+void* run_thread2(void* arg) {
+    qthread_mutex_lock(mutex);
+	// does some work when it gets a chance
+    printf("Thread 2: 3 2 1\n");
+    qthread_cond_signal(cond);
+	// queue is empty
+    qthread_cond_wait(cond, mutex);
+
+    printf("Thread 2: 6 5\n");
+    qthread_mutex_unlock(mutex);
+    return NULL;
+}
+
+void test_condvar(void) {
+    printf("\n=== Testing Condition Variables ===\n");
+
+    // Initialize mutex and condition variable
+    mutex = qthread_mutex_create();
+    cond = qthread_cond_create();
+
+    // Create threads
+    qthread_t t1 = qthread_create(run_thread1, NULL);
+    qthread_t t2 = qthread_create(run_thread2, NULL);
+
+    // Wait for both threads to complete
+    qthread_join(t1);
+    qthread_join(t2);
+
+    // Cleanup
+    qthread_mutex_destroy(mutex);
+    qthread_cond_destroy(cond);
+
+    printf("=== Condition Variable test completed ===\n");
+}
+
+
 int main(int argc, char** argv)
 {
     qthread_init();
@@ -407,4 +462,5 @@ int main(int argc, char** argv)
 	test_timed_sleep();
 	test_basic_sleep();
 	test_join_sleep();
+	test_condvar();
 }

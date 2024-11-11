@@ -24,6 +24,7 @@
  * see source files for additional details
  */
 extern void switch_thread(void **location_for_old_sp, void *new_value);
+static long get_usecs(void);
 
 /* Mutex and cond structures - @allocate them in qthread_mutex_create /
  * qthread_cond_create and free them in @the corresponding _destroy functions.
@@ -62,11 +63,11 @@ void qthread_mutex_lock(qthread_mutex_t *mutex)
 {
   if(mutex->locked == 0){
     mutex->locked = 1;
-    printf("mutex locked");
+    //printf("mutex locked");
     return;
   }
   else{
-    printf("placing %p into mutex queue when mutex is already locked");
+    //printf("placing %p into mutex queue when mutex is already locked");
     push_back(mutex->queue,current_thread);
     schedule(2);
   }
@@ -76,14 +77,14 @@ void qthread_mutex_unlock(qthread_mutex_t *mutex)
   if(mutex->queue != NULL && mutex->queue->size > 0){
     qthread_t tmp = pop_front(mutex->queue);
     if(tmp != NULL){
-	printf("placing %p from mutex queue into runnable queue",tmp);
+	//printf("placing %p from mutex queue into runnable queue",tmp);
     	push_back(runnable_queue,&tmp);
 	schedule(0);
     }
   }
   else{
     mutex->locked = 0;
-    printf("unlocking the queue");
+    //printf("unlocking the queue");
     return;
   }
 }
@@ -104,33 +105,44 @@ void qthread_cond_destroy(qthread_cond_t *cond)
 }
 
 //should add the thread in the mutex queue into the waiting condition variable queue
+// REVIEW:
+// 1. unlocks the mutex
+// 2. goes to sleep on that cond var
+// 3. wakes up only when recieves a SIGNAL on that cond var
+// 4. acquires lock and continues
 void qthread_cond_wait(qthread_cond_t *cond, qthread_mutex_t *mutex)
 {
-  //unlocks mutex
+	//unlocks mutex
     qthread_mutex_unlock(mutex);
-    printf("qthread_cond_wait, unlocking for next thread to run while this thread waits\n");
+    //printf("qthread_cond_wait, unlocking for next thread to run while this thread waits\n");
 
     //adds thread to conditional variable
-    printf("adding current thread to conditional queue %p\n",current_thread);
+    //printf("adding current thread to conditional queue %p\n",current_thread);
     push_back(cond->queue,current_thread);
     //switch to next active thread
+	//
+	// REVIEW: using 2 becuase 3 is used for sleeping and pushes the thread to sleeping set
     schedule(2);
     qthread_mutex_lock(mutex);
 }
+
+
 // condition signal should just pop the front of the queue of conditionals as its no longer waiting
+// 1. wakes up ONE Sleeping thread
+// 2. continues execution until yield is called
 void qthread_cond_signal(qthread_cond_t *cond)
 {
   //ensures conditional is not null or empty, to avoid seg fault
     if(cond->queue != NULL && cond->queue->size > 0){
       //pops from conditional queue, to 'wake up' waiting thread
       qthread_t tmp = pop_front(cond->queue);
-      printf("popping thread from conditional queue, placing %p back into runnable queue\n",tmp);
+      //printf("popping thread from conditional queue, placing %p back into runnable queue\n",tmp);
       //adds the thread to the queue of actives
       push_back(runnable_queue,tmp);
     }
-    //switches threads when woken up.
-    schedule(0);
+	// REVIEW: does not have to switch
 }
+
 //should tell all threads to 'wakeup' would pop entire queue, and place into active
 void qthread_cond_broadcast(qthread_cond_t *cond)
 {
@@ -143,7 +155,9 @@ void qthread_cond_broadcast(qthread_cond_t *cond)
         push_back(runnable_queue,tmp);
       }
     }
-    schedule(2);
+
+	// REVIEW: again DOES NOT HAVE TO SWTICH
+    /* schedule(2); */
 }
 
 

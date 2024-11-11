@@ -1,0 +1,16 @@
+Running suite(s): qthreads
+57%: Checks: 14, Failures: 2, Errors: 4
+unit-test.c:42:P:qthread_create:create_yield:0: Passed
+unit-test.c:66:P:qthread_create:create_join_return:0: Passed
+unit-test.c:85:P:qthread_create:create_join_exit:0: Passed
+unit-test.c:118:P:qthread_create:create_three:0: Passed
+unit-test.c:144:P:mutex:mutex_lock:0: Passed
+unit-test.c:176:E:mutex:mutex_lock2:0: (after this point) Received signal 11 (Segmentation fault)
+unit-test.c:215:E:mutex:mutex_three_threads:0: (after this point) Received signal 11 (Segmentation fault)
+unit-test.c:267:F:cond:cond_wait:0: Assertion 'test8_flag2 == 0' failed: test8_flag2 == 1, 0 == 0
+unit-test.c:312:E:cond:cond_broadcast:0: (after this point) Received signal 11 (Segmentation fault)
+unit-test.c:380:P:cond:cond_wait2:0: Passed
+unit-test.c:416:F:qthread_usleep:usleep_1thread:0: Assertion 'fabsl(0.5 - t2-t1) < 0.05' failed: t2-t1 == 9.05991e-06, 0.5 == 0.5, 0.05 == 0.05
+unit-test.c:435:P:qthread_usleep:usleep_2thread:0: Passed
+unit-test.c:469:P:qthread_usleep:usleep_4thread:0: Passed
+unit-test.c:491:E:qthread_usleep:usleep_mutex:0: (after this point) Received signal 11 (Segmentation fault)

@@ -74,12 +74,12 @@ void qthread_mutex_lock(qthread_mutex_t *mutex)
 }
 void qthread_mutex_unlock(qthread_mutex_t *mutex)
 {
-  if(mutex->queue != NULL && mutex->queue->size > 0){
+  if(mutex->queue->front != NULL && mutex->queue->size > 0){
     qthread_t tmp = pop_front(mutex->queue);
     if(tmp != NULL){
-	//printf("placing %p from mutex queue into runnable queue",tmp);
-    	push_back(runnable_queue,&tmp);
-	schedule(0);
+	    //printf("placing %p from mutex queue into runnable queue",tmp);
+    	push_back(runnable_queue,tmp);
+	    schedule(0);
     }
   }
   else{
@@ -133,7 +133,7 @@ void qthread_cond_wait(qthread_cond_t *cond, qthread_mutex_t *mutex)
 void qthread_cond_signal(qthread_cond_t *cond)
 {
   //ensures conditional is not null or empty, to avoid seg fault
-    if(cond->queue != NULL && cond->queue->size > 0){
+    if(cond->queue->front != NULL && cond->queue->size > 0){
       //pops from conditional queue, to 'wake up' waiting thread
       qthread_t tmp = pop_front(cond->queue);
       //printf("popping thread from conditional queue, placing %p back into runnable queue\n",tmp);
@@ -148,7 +148,7 @@ void qthread_cond_broadcast(qthread_cond_t *cond)
 {
   //go through the whole of waiting threads, and adds them to active
     while(cond->queue->size > 0){
-      if(cond->queue != NULL && cond->queue->size > 0){
+      if(cond->queue->front != NULL && cond->queue->size > 0){
         //pops from conditional queue, to 'wake up' waiting thread
         qthread_t tmp = pop_front(cond->queue);
         //adds the thread to the queue of actives

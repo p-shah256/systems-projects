@@ -187,7 +187,6 @@ void schedule(int exit)
 		/* free(old_current); */
 	} else if (exit == 2) { // JOIN
 		// don't push current to runnable .... its waiting for some other thread to end
-		// TODO: what to do here??
 	} else if (exit == 3) { // SLEEP
 		// move it into sleeping set
 		push_back(sleeping_set, old_current);

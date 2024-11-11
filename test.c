@@ -8,6 +8,14 @@
 #include <string.h>
 #include <assert.h>
 #include "qthread.h"
+#include <sys/time.h>
+
+static long get_usecs(void)
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec*1000000 + tv.tv_usec;
+}
 
 /*
   create/yield/join/exit, make sure you test the following cases:
@@ -115,10 +123,278 @@ void test3(void){
    val = qthread_join(t2);
    assert(!strcmp(val, "b"));
    qthread_mutex_destroy(mutex);
+   qthread_cond_destroy(cond);
 }
-    
+
+void* run_test4(void* arg){
+  qthread_mutex_lock(mutex);
+  printf("locking thread %s\n", (char*)arg);
+  return arg;
+}
+//tests for locking a thread
+void test4(void){
+  mutex = qthread_mutex_create();
+  //cond = qthread_cond_create();
+  qthread_t t = qthread_create(run_test4, "a");
+  void* val = qthread_join(t);
+  assert(!strcmp(val, "a"));
+}
+//tests lock and unlock for two threads
+void* run_test5(void *arg){
+  qthread_mutex_lock(mutex);
+  printf("locking thread %s\n", (char*)arg);
+  qthread_mutex_unlock(mutex);
+  printf("unlocking thread %s\n", (char*)arg);
+  return arg;
+}
+void test5(void){
+  mutex = qthread_mutex_create();
+  qthread_t t[2] = {qthread_create(run_test5, "b"),
+                     qthread_create(run_test5, "c")};
+  void* val = qthread_join(t[0]);
+  assert(!strcmp(val, "b"));
+  val = qthread_join(t[1]);
+  assert(!strcmp(val, "c"));
+  qthread_mutex_destroy(mutex);
+
+}
+//test 3 threads locking and unlcoking
+void* run_test6(void* arg){
+  int i = 3;
+  qthread_mutex_lock(mutex);
+  printf("locking thread %s\n", (char*)arg);
+  while(i > 0){
+      i--;
+      printf("while loop pass %s\n", (char*)arg);
+      printf("value of i is %d\n", i);
+  }
+  printf("unlocking thread %s\n", (char*)arg);
+  qthread_mutex_unlock(mutex);
+  return arg;
+}
+void test6(void){
+    mutex = qthread_mutex_create();
+    qthread_t t[3] = {qthread_create(run_test6, "a"),
+    qthread_create(run_test6, "b"),
+    qthread_create(run_test6, "c")};
+    void *val = qthread_join(t[0]);
+    assert(!strcmp(val, "a"));
+    val = qthread_join(t[1]);
+    assert(!strcmp(val, "b"));
+    val = qthread_join(t[2]);
+    assert(!strcmp(val, "c"));
+    qthread_mutex_destroy(mutex);
+    qthread_cond_destroy(cond);
+}
+//test three threads with Condition Variable, waiting and signaling
+void* run_test7(void* arg){
+    int i = 0;
+    qthread_mutex_lock(mutex);
+    printf("locking thread %s\n", (char*)arg);
+    while(i < 3){
+        i++;
+        printf("while loop pass %s , %d\n", (char*)arg,i);
+        printf("waiting thread %s\n", (char*)arg);
+        qthread_cond_wait(cond,mutex);
+    }
+    printf("signaling thread %s\n", (char*)arg);
+    qthread_cond_signal(cond);
+    printf("unlocking thread %s\n", (char*)arg);
+    qthread_mutex_unlock(mutex);
+    return arg;
+}
+void test7(void){
+  mutex = qthread_mutex_create();
+  cond = qthread_cond_create();
+  qthread_t t[3] = {qthread_create(run_test7, "a"),
+  qthread_create(run_test7, "b"),
+  qthread_create(run_test7, "c")};
+  void *val = qthread_join(t[0]);
+  assert(!strcmp(val, "c"));
+  val = qthread_join(t[1]);
+  assert(!strcmp(val, "b"));
+  val = qthread_join(t[2]);
+  assert(!strcmp(val, "a"));
+  qthread_mutex_destroy(mutex);
+  qthread_cond_destroy(cond);
+}
+//tests three threads and wakes them all up at once
+void* run_test8(void* arg){
+    int i = 0;
+    qthread_mutex_lock(mutex);
+    printf("locking thread %s\n", (char*)arg);
+    while(i < 3){
+        i++;
+        printf("while loop pass %s , %d\n", (char*)arg,i);
+        printf("waiting thread %s\n", (char*)arg);
+        qthread_cond_wait(cond,mutex);
+    }
+    printf("signaling thread %s\n", (char*)arg);
+    qthread_cond_broadcast(cond);
+    printf("unlocking thread %s\n", (char*)arg);
+    qthread_mutex_unlock(mutex);
+    return arg;
+}
+void test8(void){
+    mutex = qthread_mutex_create();
+    cond = qthread_cond_create();
+    qthread_t t[3] = {qthread_create(run_test8, "a"),
+    qthread_create(run_test8, "b"),
+    qthread_create(run_test8, "c")};
+    void *val = qthread_join(t[0]);
+    assert(!strcmp(val, "a"));
+    val = qthread_join(t[1]);
+    assert(!strcmp(val, "b"));
+    val = qthread_join(t[2]);
+    assert(!strcmp(val, "c"));
+    qthread_mutex_destroy(mutex);
+    qthread_cond_destroy(cond);
+}
+// runs condition wait and signal twice for the threads
+void* run_test9(void* arg){
+    int i = 0;
+    qthread_mutex_lock(mutex);
+    printf("locking thread %s\n", (char*)arg);
+    while(i < 3){
+        i++;
+        printf("while loop pass %s , %d\n", (char*)arg,i);
+        printf("waiting thread %s\n", (char*)arg);
+        qthread_cond_wait(cond,mutex);
+    }
+    printf("signaling thread %s\n", (char*)arg);
+    qthread_cond_signal(cond);
+    i = 0;
+    while(i < 3){
+        i++;
+        printf("while loop 2 pass %s , %d\n", (char*)arg,i);
+        printf("waiting 2 thread %s\n", (char*)arg);
+        qthread_cond_wait(cond,mutex);
+    }
+    printf("signaling 2 thread %s\n", (char*)arg);
+    qthread_cond_signal(cond);
+    printf("unlocking thread %s\n", (char*)arg);
+    qthread_mutex_unlock(mutex);
+    return arg;
+}
+void test9(void){
+    mutex = qthread_mutex_create();
+    cond = qthread_cond_create();
+    qthread_t t[3] = {qthread_create(run_test9, "a"),
+    qthread_create(run_test9, "b"),
+    qthread_create(run_test9, "c")};
+    void *val = qthread_join(t[0]);
+    assert(!strcmp(val, "a"));
+    val = qthread_join(t[1]);
+    assert(!strcmp(val, "b"));
+    val = qthread_join(t[2]);
+    assert(!strcmp(val, "c"));
+    qthread_mutex_destroy(mutex);
+    qthread_cond_destroy(cond);
+}
+
+void* sleep_thread(void* arg) {
+    printf("Thread %s starting, going to sleep\n", (char*)arg);
+    qthread_usleep(500000);  // sleep for 0.5 seconds
+    printf("Thread %s woke up\n", (char*)arg);
+    return arg;
+}
+
+void* running_thread(void* arg) {
+    for(int i = 0; i < 3; i++) {
+        printf("Thread %s running iteration %d\n", (char*)arg, i);
+        qthread_yield();
+    }
+    printf("Thread %s finished\n", (char*)arg);
+    return arg;
+}
+
+void test_sleep(void) {
+    printf("\n=== Testing qthread_usleep ===\n");
+
+    // Create three threads
+    qthread_t t1 = qthread_create(running_thread, "1");
+    qthread_t t2 = qthread_create(sleep_thread, "2");
+    qthread_t t3 = qthread_create(running_thread, "3");
+
+    // Join thread 1 and 3 first - they should complete while 2 is sleeping
+    void *val = qthread_join(t1);
+    assert(!strcmp(val, "1"));
+    printf("Thread 1 joined successfully\n");
+
+    val = qthread_join(t3);
+    assert(!strcmp(val, "3"));
+    printf("Thread 3 joined successfully\n");
+
+    // Now join thread 2 - it should wake up and complete
+    val = qthread_join(t2);
+    assert(!strcmp(val, "2"));
+    printf("Thread 2 joined successfully\n");
+
+    printf("=== Sleep test completed successfully ===\n");
+}
+
+
+void* varying_sleep_thread(void* arg) {
+    char* thread_id = (char*)arg;
+    long start_time = get_usecs();
+
+    printf("[%ld] Thread %s starting\n", get_usecs() - start_time, thread_id);
+
+    // Different sleep durations for different threads
+    if (*thread_id == '1') {
+        printf("[%ld] Thread %s sleeping for 0.3s\n", get_usecs() - start_time, thread_id);
+        qthread_usleep(300000);  // 0.3 seconds
+    } else if (*thread_id == '2') {
+        printf("[%ld] Thread %s sleeping for 0.1s\n", get_usecs() - start_time, thread_id);
+        qthread_usleep(100000);  // 0.1 seconds
+    } else if (*thread_id == '3') {
+        printf("[%ld] Thread %s sleeping for 0.2s\n", get_usecs() - start_time, thread_id);
+        qthread_usleep(200000);  // 0.2 seconds
+    } else {
+        // Thread 4 doesn't sleep, just yields a few times
+        for(int i = 0; i < 3; i++) {
+            printf("[%ld] Thread %s yielding\n", get_usecs() - start_time, thread_id);
+            qthread_yield();
+        }
+    }
+
+    printf("[%ld] Thread %s woke up/finished\n", get_usecs() - start_time, thread_id);
+    return arg;
+}
+
+void test_sleep_edge_cases(void) {
+    printf("\n=== Testing Sleep Edge Cases ===\n");
+    long start_time = get_usecs();
+
+    // Create 4 threads with different behaviors
+    qthread_t t1 = qthread_create(varying_sleep_thread, "1");  // longest sleep
+    qthread_t t2 = qthread_create(varying_sleep_thread, "2");  // shortest sleep
+    qthread_t t3 = qthread_create(varying_sleep_thread, "3");  // medium sleep
+    qthread_t t4 = qthread_create(varying_sleep_thread, "4");  // no sleep, just yields
+
+    // Join them in a different order than their wake-up times
+    void *val = qthread_join(t1);
+    printf("[%ld] Joined thread 1, returned %s\n", get_usecs() - start_time, (char*)val);
+
+    val = qthread_join(t3);
+    printf("[%ld] Joined thread 3, returned %s\n", get_usecs() - start_time, (char*)val);
+
+    val = qthread_join(t2);
+    printf("[%ld] Joined thread 2, returned %s\n", get_usecs() - start_time, (char*)val);
+
+    val = qthread_join(t4);
+    printf("[%ld] Joined thread 4, returned %s\n", get_usecs() - start_time, (char*)val);
+
+    printf("=== Sleep edge case test completed ===\n");
+}
+
+
 int main(int argc, char** argv)
 {
     qthread_init();
-    test1();
+    /* test1(); */
+    // test2();
+    /* test7(); */
+	/* test_sleep(); */
+	test_sleep_edge_cases();
 }

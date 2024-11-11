@@ -149,8 +149,61 @@ void qthread_yield(void)
 	schedule(0);
 }
 
+static int wake_sleeping_threads(void) {
+    if (sleeping_set->size == 0) {
+        return 0;  // no sleeping threads
+    }
+
+    printf("%p SCHEDULE: sleeping threads present %d\n", current_thread, sleeping_set->size);
+    qthread_t head = pop_front(sleeping_set);
+
+    // Try to find a thread that's ready to wake up
+    while (head->timing_information > get_usecs()) {
+        if (head->next) {
+            qthread_t new_head = pop_front(sleeping_set);
+            push_back(sleeping_set, head);
+            head = new_head;
+        }
+    }
+    // make head runnable
+    push_back(runnable_queue, head);
+
+    return 1;  // successfully woke a thread
+}
 
 void schedule(int exit)
+{
+	printf("%p SCHEDULE: schedule called with exit %d\n", current_thread, exit);
+	qthread_t old_current = current_thread;
+
+	if (runnable_queue->size == 0) {
+		printf("%p SCHEDULE: queue size 0, checking for sleeping set\n", current_thread);
+		if (!wake_sleeping_threads()) {
+            return;  // nothing to schedule
+        }
+	}
+
+	if (exit == 1) { // EXIT
+		/* free(old_current); */
+	} else if (exit == 2) { // JOIN
+		// don't push current to runnable .... its waiting for some other thread to end
+		// TODO: what to do here??
+	} else if (exit == 3) { // SLEEP
+		// move it into sleeping set
+		push_back(sleeping_set, old_current);
+	} else {                // YEILD
+		// if last thread calls yeild, crash .. simpler
+		push_back(runnable_queue, old_current);
+	}
+
+	// /*SWITCH RUNNABLE******************************************************/
+	current_thread = pop_front(runnable_queue);
+	printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
+	switch_thread(&(old_current->saved_stack_pointer), (current_thread->saved_stack_pointer));
+	return;
+}
+
+void schedule_old(int exit)
 {
 	printf("%p SCHEDULE: schedule called\n", current_thread);
 	qthread_t old_current = current_thread;
@@ -178,6 +231,9 @@ void schedule(int exit)
 		free(old_current);
 	} else if (exit == 2) { // WAIT
 	    // do not push back the current thread
+	    if (runnable_queue->size == 0) {
+			printf("%p SCHEDULE: waiting on a sleeping thread .... and nothing more to run\n", current_thread);
+		}
 	} else if (exit == 3) { // SLEEP
 		// move it into sleeping set
 		push_back(sleeping_set, old_current);
@@ -250,13 +306,12 @@ void push_back(threadq_t queue, qthread_t thread)
         queue->end = thread;
     }
     queue->size++;
-    printf("QUEUE: Pushed back thread %p\n", thread);
+    /* printf("QUEUE: Pushed back thread %p\n", thread); */
 }
 
 qthread_t pop_front(struct threadq *queue)
 {
 
-    printf("QUEUE: pop_front returning %p\n", queue->front);
     // Check for empty queue
     if(queue->size == 0) {
 		perror("cannot pop from an empty queue");
@@ -271,5 +326,6 @@ qthread_t pop_front(struct threadq *queue)
         queue->end = NULL;
     }
 
+    /* printf("QUEUE: pop_front returning %p\n", head); */
     return head;
 }

@@ -463,4 +463,6 @@ int main(int argc, char** argv)
 	test_basic_sleep();
 	test_join_sleep();
 	test_condvar();
+	test8();
+	test9();
 }

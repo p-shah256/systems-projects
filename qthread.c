@@ -77,8 +77,10 @@ void qthread_mutex_unlock(qthread_mutex_t *mutex)
   if(mutex->queue->front != NULL && mutex->queue->size > 0){
     qthread_t tmp = pop_front(mutex->queue);
     if(tmp != NULL){
-	printf("placing %p from mutex queue into runnable queue",tmp);
-    	push_back(runnable_queue,tmp);
+	if(tmp->dead != 1){
+        printf("placing %p from mutex queue into runnable queue",tmp);
+        push_back(runnable_queue,tmp);
+	}
     }
   }
   else{
@@ -138,7 +140,9 @@ void qthread_cond_signal(qthread_cond_t *cond)
       qthread_t tmp = pop_front(cond->queue);
       printf("popping thread from conditional queue, placing %p back into runnable queue\n",tmp);
       //adds the thread to the queue of actives
+      if(tmp->dead == 1){
       push_back(runnable_queue,tmp);
+      }
     }
 	// REVIEW: does not have to switch
 }
@@ -152,7 +156,9 @@ void qthread_cond_broadcast(qthread_cond_t *cond)
         //pops from conditional queue, to 'wake up' waiting thread
         qthread_t tmp = pop_front(cond->queue);
         //adds the thread to the queue of actives
-        push_back(runnable_queue,tmp);
+	if(tmp->dead != 1){
+	push_back(runnable_queue,tmp);
+	}
       }
     }
 

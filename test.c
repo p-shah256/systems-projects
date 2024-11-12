@@ -10,6 +10,7 @@
 #include "qthread.h"
 #include "tests_cond_var.c"
 #include "tests_usleep.c"
+#include "tests_extra.c"
 #include <sys/time.h>
 
 /*
@@ -60,16 +61,16 @@ int main(int argc, char** argv)
    /* test1(); */
    /*   test2();  */
    /*  test7(); */
-	/* test_timed_sleep(); */
-	/* test_basic_sleep(); */
-	/* test_join_sleep(); */
-	/* test_four_threads_sleep(); */
-	/* test_two_threads_sleep(); */
+	test_timed_sleep();
+	test_basic_sleep();
+	test_join_sleep();
+	test_four_threads_sleep();
+	test_two_threads_sleep();
 	/* test8(); */
 	/* test9(); */
 	cond_wait2();
-	/* cond_broadcast(); */
-	/* cond_wait(); */
-	/* usleep1thread(); */
+	cond_broadcast();
+	cond_wait();
+	usleep1thread();
 
 }

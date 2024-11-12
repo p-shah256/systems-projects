@@ -398,6 +398,34 @@ void test_join_sleep(void) {
     qthread_join(t2);
 }
 
+void* run_sleep_test(void* arg) {
+    long sleep_time = 500000;  // 500ms in microseconds
+    long start_time = get_usecs();
+
+    qthread_usleep(sleep_time);
+
+    long elapsed = get_usecs() - start_time;
+    // Check if elapsed time is within 500ms ± 50ms (450000-550000 microseconds)
+    assert(elapsed >= 450000 && elapsed <= 550000);
+    printf("Thread slept for %ld microseconds\n", elapsed);
+    return NULL;
+}
+
+void test_sleep_duration(void) {
+    printf("\n=== Testing Sleep Duration ===\n");
+
+    qthread_t t = qthread_create(run_sleep_test, NULL);
+    qthread_join(t);
+
+    printf("=== Sleep Duration test completed ===\n");
+}
+
+
+
+
+
+
+
 
 qthread_mutex_t* mutex;
 qthread_cond_t* cond;

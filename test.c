@@ -534,15 +534,15 @@ void test_four_threads_sleep(void) {
 int main(int argc, char** argv)
 {
     qthread_init();
-    /* test1(); */
-    // test2();
-    /* test7(); */
-	/* test_timed_sleep(); */
-	/* test_basic_sleep(); */
-	/* test_join_sleep(); */
-	/* test_condvar(); */
+    test1();
+    /* test2(); */
+    test7();
+	test_timed_sleep();
+	test_basic_sleep();
+	test_join_sleep();
+	test_condvar();
 	test_four_threads_sleep();
-	/* test_two_threads_sleep(); */
+	test_two_threads_sleep();
 	/* test8(); */
 	/* test9(); */
 }

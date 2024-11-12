@@ -160,6 +160,9 @@ void qthread_yield(void)
 
 
 void switch_runnable(qthread_t old_current) {
+	if (runnable_queue->size == 0) {
+		printf("%p SCHEDULE: nothing to switch to, returning .... size = %d\n", old_current, runnable_queue->size);
+	}
 	current_thread = pop_front(runnable_queue);
 	printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
 	if (current_thread == old_current) {

@@ -55,57 +55,83 @@ void cond_wait(void) {
 /**********************************/
 /* // Test 2: Broadcast wakes all */
 /**********************************/
-/* void cond_broadcast(void) { */
-/*     printf("\n=== Testing cond_broadcast ===\n"); */
-/*     mutex = qthread_mutex_create(); */
-/*     cond = qthread_cond_create(); */
+void cond_broadcast(void) {
+    printf("\n=== Testing cond_broadcast ===\n");
+    mutex = qthread_mutex_create();
+    cond = qthread_cond_create();
 
-/*     int ids[3] = {1, 2, 3}; */
-/*     qthread_t t[3]; */
-/*     for(int i = 0; i < 3; i++) { */
-/*         t[i] = qthread_create(wait_thread, &ids[i]); */
-/*     } */
+    int ids[3] = {1, 2, 3};
+    qthread_t t[3];
+    for(int i = 0; i < 3; i++) {
+        t[i] = qthread_create(wait_thread, &ids[i]);
+    }
 
-/*     qthread_yield();  // Let threads wait */
-/*     qthread_cond_broadcast(cond); */
+    qthread_yield();  // Let threads wait
+    qthread_cond_broadcast(cond);
 
-/*     for(int i = 0; i < 3; i++) { */
-/*         qthread_join(t[i]); */
-/*     } */
+    for(int i = 0; i < 3; i++) {
+        qthread_join(t[i]);
+    }
 
-/*     qthread_mutex_destroy(mutex); */
-/*     qthread_cond_destroy(cond); */
-/* } */
+    qthread_mutex_destroy(mutex);
+    qthread_cond_destroy(cond);
+}
 
 
 /***************************************/
 /* // Test 3: Wait twice, signal twice */
 /***************************************/
-/* void* double_wait_thread(void* arg) { */
-/*     qthread_mutex_lock(mutex); */
+void* double_wait_thread(void* arg) {
+    printf("[Thread] Starting double wait thread\n");
 
-/*     qthread_cond_wait(cond, mutex); */
+    printf("[Thread] Attempting to lock mutex\n");
+    qthread_mutex_lock(mutex);
+    printf("[Thread] Mutex locked successfully\n");
 
-/*     qthread_cond_wait(cond, mutex); */
+    printf("[Thread] Entering first wait state\n");
+    qthread_cond_wait(cond, mutex);
+    printf("[Thread] Woken up from first wait\n");
 
-/*     qthread_mutex_unlock(mutex); */
-/*     return NULL; */
-/* } */
+    printf("[Thread] Entering second wait state\n");
+    qthread_cond_wait(cond, mutex);
+    printf("[Thread] Woken up from second wait\n");
 
-/* void cond_wait2(void) { */
-/*     printf("\n=== Testing cond_wait2 ===\n"); */
-/*     mutex = qthread_mutex_create(); */
-/*     cond = qthread_cond_create(); */
+    printf("[Thread] Unlocking mutex\n");
+    qthread_mutex_unlock(mutex);
+    printf("[Thread] Mutex unlocked, thread finishing\n");
 
-/*     qthread_t t = qthread_create(double_wait_thread, NULL); */
+    return NULL;
+}
 
-/*     qthread_yield(); */
-/*     qthread_cond_signal(cond); */
-/*     qthread_yield(); */
-/*     qthread_cond_signal(cond); */
+void cond_wait2(void) {
+    printf("\n=== Testing cond_wait2 ===\n");
 
-/*     qthread_join(t); */
+    printf("[Main] Creating mutex and condition variable\n");
+    mutex = qthread_mutex_create();
+    cond = qthread_cond_create();
 
-/*     qthread_mutex_destroy(mutex); */
-/*     qthread_cond_destroy(cond); */
-/* } */
+    printf("[Main] Creating worker thread\n");
+    qthread_t t = qthread_create(double_wait_thread, NULL);
+
+    printf("[Main] Yielding to let worker thread start\n");
+    qthread_yield();
+
+    printf("[Main] Sending first signal\n");
+    qthread_cond_signal(cond);
+
+    printf("[Main] Yielding to let worker process first signal\n");
+    qthread_yield();
+
+    printf("[Main] Sending second signal\n");
+    qthread_cond_signal(cond);
+
+    printf("[Main] Waiting for worker thread to complete\n");
+    qthread_join(t);
+    printf("[Main] Worker thread joined successfully\n");
+
+    printf("[Main] Cleaning up - destroying mutex and condition variable\n");
+    qthread_mutex_destroy(mutex);
+    qthread_cond_destroy(cond);
+
+    printf("=== Test cond_wait2 completed ===\n");
+}

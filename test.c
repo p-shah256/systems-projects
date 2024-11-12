@@ -67,8 +67,9 @@ int main(int argc, char** argv)
 	/* test_two_threads_sleep(); */
 	/* test8(); */
 	/* test9(); */
-	/* cond_wait2(); */
+	cond_wait2();
 	/* cond_broadcast(); */
-	cond_wait();
+	/* cond_wait(); */
+	/* usleep1thread(); */
 
 }

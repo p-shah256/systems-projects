@@ -132,7 +132,7 @@ void* run_sleep_test(void* arg) {
     return NULL;
 }
 
-void test_sleep_duration(void) {
+void usleep1thread(void) {
     printf("\n=== Testing Sleep Duration ===\n");
 
     qthread_t t = qthread_create(run_sleep_test, NULL);

@@ -136,7 +136,13 @@ void qthread_init(void)
 
 	//printf("qthread system initialized \n");
 	runnable_queue = malloc(sizeof(struct threadq));
+    runnable_queue->front = NULL;
+    runnable_queue->end = NULL;
+    runnable_queue->size = 0;
 	sleeping_set = malloc(sizeof(struct threadq));
+    sleeping_set->front = NULL;
+    sleeping_set->end = NULL;
+    sleeping_set->size = 0;
 	current_thread = thread;
 }
 

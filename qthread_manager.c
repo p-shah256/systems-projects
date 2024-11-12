@@ -135,10 +135,12 @@ void qthread_init(void)
 	// create the RUNNABLE QUEUE and mark as active
 
 	printf("qthread system initialized \n");
+	// RUNNABLE QUEUE
 	runnable_queue = malloc(sizeof(struct threadq));
     runnable_queue->front = NULL;
     runnable_queue->end = NULL;
     runnable_queue->size = 0;
+	// SLEEPING SET
 	sleeping_set = malloc(sizeof(struct threadq));
     sleeping_set->front = NULL;
     sleeping_set->end = NULL;
@@ -157,18 +159,33 @@ void qthread_yield(void)
 
 static int wake_sleeping_threads(void) {
     printf("%p WAKE_UP_SLEEPING: sleeping threads present %d\n", current_thread, sleeping_set->size);
-    qthread_t head = sleeping_set->front;
-    printf("%p WAKE_UP_SLEEPING: sleeping set head %p\n", current_thread, sleeping_set->front);
+	qthread_t head = pop_front(sleeping_set);
+    printf("%p WAKE_UP_SLEEPING: sleeping set head %p\n", current_thread, head);
 
     // Try to find a thread that's ready to wake up
     while (head->timing_information > get_usecs()) {
-        push_back(sleeping_set, head);
-        head = sleeping_set->front;
+        if (head->next) {
+			push_back(sleeping_set, head);
+			qthread_t new_head = pop_front(sleeping_set);
+            head = new_head;
+        }
     }
+
+    printf("%p WAKE_UP_SLEEPING: found a thread that can be woken up %p\n", current_thread, head);
+    printf("%p WAKE_UP_SLEEPING: now sleeping threads %d\n", current_thread, sleeping_set->size);
     // make head runnable
     push_back(runnable_queue, head);
 
     return 1;  // successfully woke a thread
+}
+
+void switch_runnable(qthread_t old_current) {
+	current_thread = pop_front(runnable_queue);
+	printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
+	if (current_thread == old_current) {
+		return;
+	}
+	switch_thread(&(old_current->saved_stack_pointer), (current_thread->saved_stack_pointer));
 }
 
 // REVIEW: a few issues with this:
@@ -187,11 +204,13 @@ void schedule(int exit)
 	if (runnable_queue->size == 0 ) {
 		if (sleeping_set->size > 0) {
 			wake_sleeping_threads(); // only if sleeping threads present
+			switch_runnable(old_current);
+			return;
 		}
-		printf("%p SCHEDULE: queue size 0, checking for sleeping set\n", current_thread);
 	}
 
 	if (exit == 1) { // EXIT
+		printf("%p EXIT: freeing up....\n", old_current);
 		/* free(old_current); */
 	} else if (exit == 2) { // JOIN
 		// don't push current to runnable .... its waiting for some other thread to end
@@ -207,13 +226,7 @@ void schedule(int exit)
 	if (runnable_queue->size == 0 && sleeping_set->size > 0) {
 			wake_sleeping_threads(); // only if sleeping threads present
 	}
-	current_thread = pop_front(runnable_queue);
-	printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
-	if (current_thread == old_current) {
-		return;
-	}
-	switch_thread(&(old_current->saved_stack_pointer), (current_thread->saved_stack_pointer));
-	return;
+	switch_runnable(old_current);
 }
 
 /* qthread_exit, qthread_join - exit argument is returned by

@@ -480,6 +480,12 @@ void test_condvar(void) {
     printf("=== Condition Variable test completed ===\n");
 }
 
+// Test structure to pass sleep duration and verify results
+typedef struct {
+    long sleep_time;
+    long start_time;
+    long end_time;
+} sleep_info_t;
 
 int main(int argc, char** argv)
 {

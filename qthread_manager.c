@@ -247,7 +247,7 @@ void schedule(int exit)
 	//printf("%p SCHEDULE: schedule called with exit %d\n", current_thread, exit);
 	qthread_t old_current = current_thread;
 
-	if (runnable_queue->size == 0 ) {
+	if (runnable_queue->size == 0 && exit == 1) {
 		if (sleeping_set->size > 0) {
 			//printf("%p SCHEDULE: no runnable threads checking sleeping threads\n", current_thread);
 			wake_sleeping_threads(); // only if sleeping threads present

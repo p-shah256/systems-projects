@@ -63,25 +63,27 @@ void qthread_mutex_lock(qthread_mutex_t *mutex)
 {
   if(mutex->locked == 0){
     mutex->locked = 1;
-    //////printf("mutex locked");
+    //printf("mutex locked");
     return;
   }
   else{
-    //////printf("placing %p into mutex queue when mutex is already locked",current_thread);
+    //printf("placing %p into mutex queue when mutex is already locked",current_thread);
     push_back(mutex->queue,current_thread);
     schedule(2);
   }
 }
 void qthread_mutex_unlock(qthread_mutex_t *mutex)
 {
-  if(mutex->queue->front != NULL && mutex->queue->size > 0){
+	// if there are items in the queue
+  if(mutex->queue->size > 0){
     qthread_t tmp = pop_front(mutex->queue);
     if(tmp != NULL){
-	if(tmp->dead != 1){
-        //////printf("placing %p from mutex queue into runnable queue",tmp);
+	/* if(tmp->dead != 1){ */
+        //printf("placing %p from mutex queue into runnable queue",tmp);
         push_back(runnable_queue,tmp);
-	}
+	/* } */
     }
+	return;
   }
   else{
     mutex->locked = 0;

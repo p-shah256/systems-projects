@@ -216,52 +216,45 @@ void schedule(int exit)
 	return;
 }
 
-
-		current_thread = pop_front(runnable_queue);
-		printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
-		switch_thread(&(old_current->saved_stack_pointer), (current_thread->saved_stack_pointer));
-		return;
+/* qthread_exit, qthread_join - exit argument is returned by
+* qthread_join. Note that join blocks if the thread hasn't exited
+* yet, and is allowed to crash @if the thread doesn't exist.
+* return;
+*/
+void qthread_exit(void *val)
+{
+	printf("%p EXIT: exiting...\n", current_thread);
+	current_thread->return_val = val;
+	current_thread->dead = 1;
+	// wake up any sleeping threads -- add them to the runnable list
+	if (current_thread->waiter) {
+		printf("%p EXIT: waking up sleeping thread %p\n", current_thread, current_thread->waiter);
+		push_back(runnable_queue, current_thread->waiter);
 	}
+	schedule(1);
+	return;
+}
 
-	/* qthread_exit, qthread_join - exit argument is returned by
-	* qthread_join. Note that join blocks if the thread hasn't exited
-	* yet, and is allowed to crash @if the thread doesn't exist.
-	* return;
-	*/
-	void qthread_exit(void *val)
-	{
-		printf("%p EXIT: exiting...\n", current_thread);
-		current_thread->return_val = val;
-		current_thread->dead = 1;
-		// wake up any sleeping threads -- add them to the runnable list
-		if (current_thread->waiter) {
-			printf("%p EXIT: waking up sleeping thread %p\n", current_thread, current_thread->waiter);
-			push_back(runnable_queue, current_thread->waiter);
-		}
-		schedule(1);
-		return;
+void *qthread_join(qthread_t thread)
+{
+	printf("\n%p JOIN: is joining and waiting for %p\n", current_thread, thread);
+	thread->waiter = current_thread;
+	while (thread->dead != 1) {
+		printf("%p JOIN: thread is not dead yet, putting to wait\n", current_thread);
+		// and take it off runnable list too
+		schedule(2); // 2= wait - does not put it into runnable_queue will be woken up by some other thread
 	}
-
-	void *qthread_join(qthread_t thread)
-	{
-		printf("\n%p JOIN: is joining and waiting for %p\n", current_thread, thread);
-		thread->waiter = current_thread;
-		while (thread->dead != 1) {
-			printf("%p JOIN: thread is not dead yet, putting to wait\n", current_thread);
-			// and take it off runnable list too
-			schedule(2); // 2= wait - does not put it into runnable_queue will be woken up by some other thread
-		}
-		return thread->return_val;
-	}
+	return thread->return_val;
+}
 
 
-	/* qthread_usleep - yield to next runnable thread, making arrangements
-	* to be put back on the active list after 'usecs' timeout.
-	*/
-	void qthread_usleep(long int usecs)
-	{
-		current_thread->timing_information = get_usecs() + usecs;
-		schedule(3);
+/* qthread_usleep - yield to next runnable thread, making arrangements
+* to be put back on the active list after 'usecs' timeout.
+*/
+void qthread_usleep(long int usecs)
+{
+	current_thread->timing_information = get_usecs() + usecs;
+	schedule(3);
 }
 
 

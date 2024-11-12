@@ -157,16 +157,33 @@ void qthread_yield(void)
 	schedule(0);
 }
 
+
+
+void switch_runnable(qthread_t old_current) {
+	current_thread = pop_front(runnable_queue);
+	printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
+	if (current_thread == old_current) {
+		return;
+	}
+	switch_thread(&(old_current->saved_stack_pointer), (current_thread->saved_stack_pointer));
+}
+
 static int wake_sleeping_threads(void) {
     printf("%p WAKE_UP_SLEEPING: sleeping threads present %d\n", current_thread, sleeping_set->size);
-	qthread_t head = pop_front(sleeping_set);
+    if (sleeping_set->size == 0) {
+        return 0;  // no sleeping threads
+    }
+
+    //printf("%p SCHEDULE: sleeping threads present %d\n", current_thread, sleeping_set->size);
+    qthread_t head = pop_front(sleeping_set);
     printf("%p WAKE_UP_SLEEPING: sleeping set head %p\n", current_thread, head);
 
     // Try to find a thread that's ready to wake up
     while (head->timing_information > get_usecs()) {
+		printf("%p WAKE_UP_SLEEPING: thread timing info = %ld, get usecs = %ld\n", head, head->timing_information, get_usecs());
         if (head->next) {
-			push_back(sleeping_set, head);
-			qthread_t new_head = pop_front(sleeping_set);
+            qthread_t new_head = pop_front(sleeping_set);
+            push_back(sleeping_set, head);
             head = new_head;
         }
     }
@@ -179,13 +196,35 @@ static int wake_sleeping_threads(void) {
     return 1;  // successfully woke a thread
 }
 
-void switch_runnable(qthread_t old_current) {
-	current_thread = pop_front(runnable_queue);
-	printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
-	if (current_thread == old_current) {
-		return;
+void scheduleOLD(int exit)
+{
+	//printf("%p SCHEDULE: schedule called with exit %d\n", current_thread, exit);
+	qthread_t old_current = current_thread;
+
+	if (runnable_queue->size == 0) {
+		//printf("%p SCHEDULE: queue size 0, checking for sleeping set\n", current_thread);
+		if (!wake_sleeping_threads()) {
+            return;  // nothing to schedule
+        }
 	}
+
+	if (exit == 1) { // EXIT
+		/* free(old_current); */
+	} else if (exit == 2) { // JOIN
+		// don't push current to runnable .... its waiting for some other thread to end
+	} else if (exit == 3) { // SLEEP
+		// move it into sleeping set
+		push_back(sleeping_set, old_current);
+	} else {                // YEILD
+		// if last thread calls yeild, crash .. simpler
+		push_back(runnable_queue, old_current);
+	}
+
+	// /*SWITCH RUNNABLE******************************************************/
+	current_thread = pop_front(runnable_queue);
+	//printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
 	switch_thread(&(old_current->saved_stack_pointer), (current_thread->saved_stack_pointer));
+	return;
 }
 
 // REVIEW: a few issues with this:
@@ -203,9 +242,8 @@ void schedule(int exit)
 
 	if (runnable_queue->size == 0 ) {
 		if (sleeping_set->size > 0) {
+			printf("%p SCHEDULE: no runnable threads checking sleeping threads\n", current_thread);
 			wake_sleeping_threads(); // only if sleeping threads present
-			switch_runnable(old_current);
-			return;
 		}
 	}
 
@@ -215,6 +253,7 @@ void schedule(int exit)
 	} else if (exit == 2) { // JOIN
 		// don't push current to runnable .... its waiting for some other thread to end
 	} else if (exit == 3) { // SLEEP
+		printf("%p SCHEDULE: going to sleeeeep....... %d\n", old_current, exit);
 		// move it into sleeping set
 		push_back(sleeping_set, old_current);
 	} else {                // YEILD
@@ -222,10 +261,6 @@ void schedule(int exit)
 		push_back(runnable_queue, old_current);
 	}
 
-	// /*SWITCH RUNNABLE******************************************************/
-	if (runnable_queue->size == 0 && sleeping_set->size > 0) {
-			wake_sleeping_threads(); // only if sleeping threads present
-	}
 	switch_runnable(old_current);
 }
 

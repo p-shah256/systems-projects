@@ -216,43 +216,6 @@ void schedule(int exit)
 	return;
 }
 
-	void schedule_old(int exit)
-	{
-		printf("%p SCHEDULE: schedule called\n", current_thread);
-		qthread_t old_current = current_thread;
-		// EXECUTES only when no threads remain
-		if (runnable_queue->size == 0) {
-			printf("%p SCHEDULE: queue size 0, checking for sleeping set\n", current_thread);
-			if (sleeping_set->size > 0) {
-				printf("%p SCHEDULE: sleeping threads present %d\n", current_thread, sleeping_set->size);
-				qthread_t head = pop_front(sleeping_set);
-				// TODO: what if no sleeping threads can be woken up? keep running this while loop?
-				while (head->timing_information > get_usecs()) {
-					if (head->next) {
-						qthread_t tmp = head->next;
-						push_back(sleeping_set, head);
-						head = tmp;
-					}
-				}
-				// make head runnable
-				push_back(runnable_queue, head);
-			}
-			return;
-		}
-
-		if (exit == 1) { // EXIT
-			free(old_current);
-		} else if (exit == 2) { // WAIT
-			// do not push back the current thread
-			if (runnable_queue->size == 0) {
-				printf("%p SCHEDULE: waiting on a sleeping thread .... and nothing more to run\n", current_thread);
-			}
-		} else if (exit == 3) { // SLEEP
-			// move it into sleeping set
-			push_back(sleeping_set, old_current);
-		} else {                // YEILD
-			push_back(runnable_queue, old_current);
-		}
 
 		current_thread = pop_front(runnable_queue);
 		printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);

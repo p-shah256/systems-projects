@@ -164,11 +164,15 @@ void switch_runnable(qthread_t old_current) {
 		printf("%p SCHEDULE: nothing to switch to, returning .... size = %d\n", old_current, runnable_queue->size);
 	}
 	current_thread = pop_front(runnable_queue);
-	printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
 	if (current_thread == old_current) {
 		return;
+	
 	}
-	switch_thread(&(old_current->saved_stack_pointer), (current_thread->saved_stack_pointer));
+	if(current_thread->dead != 1){
+		printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
+	        switch_thread(&(old_current->saved_stack_pointer), (current_thread->saved_stack_pointer));
+	}
+	return;
 }
 
 static int wake_sleeping_threads(void) {
@@ -201,11 +205,11 @@ static int wake_sleeping_threads(void) {
 
 void scheduleOLD(int exit)
 {
-	//printf("%p SCHEDULE: schedule called with exit %d\n", current_thread, exit);
+	//Wprintf("%p SCHEDULE: schedule called with exit %d\n", current_thread, exit);
 	qthread_t old_current = current_thread;
 
 	if (runnable_queue->size == 0) {
-		//printf("%p SCHEDULE: queue size 0, checking for sleeping set\n", current_thread);
+		//Wprintf("%p SCHEDULE: queue size 0, checking for sleeping set\n", current_thread);
 		if (!wake_sleeping_threads()) {
             return;  // nothing to schedule
         }
@@ -225,7 +229,7 @@ void scheduleOLD(int exit)
 
 	// /*SWITCH RUNNABLE******************************************************/
 	current_thread = pop_front(runnable_queue);
-	//printf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
+	//Wprintf("%p SCHEDULE: all setup, switching from %p -> %p\n", old_current, old_current, current_thread);
 	switch_thread(&(old_current->saved_stack_pointer), (current_thread->saved_stack_pointer));
 	return;
 }
@@ -326,7 +330,7 @@ void push_back(threadq_t queue, qthread_t thread)
         queue->end = thread;
     }
     queue->size++;
-    /* printf("QUEUE: Pushed back thread %p\n", thread); */
+    /* Wprintf("QUEUE: Pushed back thread %p\n", thread); */
 }
 
 qthread_t pop_front(struct threadq *queue)
@@ -346,6 +350,6 @@ qthread_t pop_front(struct threadq *queue)
         queue->end = NULL;
     }
 
-    /* printf("QUEUE: pop_front returning %p\n", head); */
+    /* Wprintf("QUEUE: pop_front returning %p\n", head); */
     return head;
 }

@@ -84,7 +84,7 @@ void test2(void){
 
     // test null void *, should return just e?
     qthread_t t3[2] = {qthread_create(run_test2, "d"),
-    qthread_create(NULL, "e")};
+    qthread_create(run_test2, "e")};
     val = qthread_join(t3[0]);
     assert(!strcmp(val, "d"));
     val = qthread_join(t3[1]);
@@ -535,7 +535,7 @@ int main(int argc, char** argv)
 {
     qthread_init();
    // test1();
-    // test2(); 
+     test2(); 
     test7();
 	test_timed_sleep();
 	test_basic_sleep();

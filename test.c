@@ -487,16 +487,62 @@ typedef struct {
     long end_time;
 } sleep_info_t;
 
+
+void test_two_threads_sleep(void) {
+    printf("\n=== Testing Two Threads Sleep (500ms) ===\n");
+
+    sleep_info_t info1 = {.sleep_time = 500000}; // 500ms
+    sleep_info_t info2 = {.sleep_time = 500000}; // 500ms
+
+    // Create and start both threads
+    qthread_t t1 = qthread_create(run_sleep, &info1);
+    qthread_t t2 = qthread_create(run_sleep, &info2);
+
+    // Wait for both threads to complete
+    qthread_join(t1);
+    qthread_join(t2);
+
+    printf("=== Two Threads Sleep test completed ===\n");
+}
+
+void test_four_threads_sleep(void) {
+    printf("\n=== Testing Four Threads Sleep (250ms/500ms) ===\n");
+
+    // Create info structures for each thread
+    sleep_info_t info[4] = {
+        {.sleep_time = 250000}, // 250ms
+        {.sleep_time = 250000}, // 250ms
+        {.sleep_time = 500000}, // 500ms
+        {.sleep_time = 500000}  // 500ms
+    };
+
+    // Create and start all threads
+    qthread_t threads[4];
+    for(int i = 0; i < 4; i++) {
+        threads[i] = qthread_create(run_sleep, &info[i]);
+    }
+
+    // Wait for all threads to complete
+    for(int i = 0; i < 4; i++) {
+        qthread_join(threads[i]);
+    }
+
+    printf("=== Four Threads Sleep test completed ===\n");
+}
+
+
 int main(int argc, char** argv)
 {
     qthread_init();
     /* test1(); */
     // test2();
     /* test7(); */
-	test_timed_sleep();
-	test_basic_sleep();
-	test_join_sleep();
-	test_condvar();
-	test8();
-	test9();
+	/* test_timed_sleep(); */
+	/* test_basic_sleep(); */
+	/* test_join_sleep(); */
+	/* test_condvar(); */
+	test_four_threads_sleep();
+	/* test_two_threads_sleep(); */
+	/* test8(); */
+	/* test9(); */
 }

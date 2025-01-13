@@ -1,0 +1,69 @@
+    TEST 0: empty line
+    0a : EOF exit 0 : SUCCESS
+    0b : EOF no output : SUCCESS
+    TEST 1: bad pipes and redirects
+    AddressSanitizer:DEADLYSIGNAL
+    =================================================================
+    ==43==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000000 (pc 0x7fd67b624834 bp 0x7ffee678dea0 sp 0x7ffee678de20 T0)
+    ==43==The signal is caused by a READ memory access.
+    ==43==Hint: address points to the zero page.
+    #0 0x7fd67b624834 in execvpe (/lib/x86_64-linux-gnu/libc.so.6+0xeb834)
+    #1 0x563c0c8dfb51 in runPipe /autograder/submission/external_commands.c:276
+    #2 0x563c0c8e0090 in runPipeline /autograder/submission/command_loop.c:56
+    #3 0x563c0c8dcd33 in main /autograder/submission/shell56.c:85
+    #4 0x7fd67b562d8f (/lib/x86_64-linux-gnu/libc.so.6+0x29d8f)
+    #5 0x7fd67b562e3f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x29e3f)
+    #6 0x563c0c8dc6c4 in _start (/autograder/submission/shell56+0x36c4)
+
+    AddressSanitizer can not provide additional info.
+    SUMMARY: AddressSanitizer: SEGV (/lib/x86_64-linux-gnu/libc.so.6+0xeb834) in execvpe
+    ==43==ABORTING
+    open input file: No such file or directory
+    Syntax error: expected output file after '>'
+    1a : exit 0 or 1 : SUCCESS
+    1b : zero-len output : FAILED
+    test -f /tmp/tmp.37 && ! test -s /tmp/tmp.37
+    TEST 2: input redirect
+    2a : exit 0 : SUCCESS
+    2b : input redirect : SUCCESS
+    TEST 3: output redirect
+    3a : exit 0 : SUCCESS
+    3b : output file permissions : SUCCESS
+    3c : output redirect : SUCCESS
+    TEST 4: simple pipe
+    4a : exit 0 : SUCCESS
+    4b : simple pipe : SUCCESS
+    TEST 5: pipe return value
+    5a : false | true : SUCCESS
+    5b : true | false : SUCCESS
+    TEST 6: pipes and redirection
+
+    6a : redirect, pipe : SUCCESS
+    TEST 7: input redirection fails
+    Error changing file permissions: No such file or directory
+    7a : exit 0 or 1 : SUCCESS
+    TEST 8: blank line, EOF
+    8a : exit 0 : SUCCESS
+    TEST 9: cd - various cases
+    9a : cd : FAILED
+    [ 'exit code ' = 'exit code 0' -a 'Current working directory: /root' = /root ]
+    9b : cd /tmp : FAILED
+    [ 'exit code 0' = 'exit code 0' -a 'Current working directory: /tmp' = /tmp ]
+    9c : cd /bad : FAILED
+    [ 'exit code 0' = 'exit code 1' -a 'cd: No such file or directory' = 'cd: No such file or directory' ]
+    9c : cd 1 2 : FAILED
+    [ 'exit code 0' = 'exit code 1' -a 'cd: wrong number of arguments' = 'cd: wrong number of arguments' ]
+    TEST 10: exit
+    10a : exit : SUCCESS
+    10b : exit 5 : SUCCESS
+    10c : exit 5 6 : FAILED
+    [ 1 = 3 -a '' = 1 -a 'exit: too many arguments' = 'exit: too many arguments' ]
+    TEST 11: double, triple pipe
+    11a : exit success : SUCCESS
+    11b : double pipe : SUCCESS
+    11b : triple pipe : SUCCESS
+    TEST 12: dangling pipes
+    12a : exit success : SUCCESS
+    TEST 13: file descriptor leak
+    13a : <6 file descriptors (should actually be 3...) : SUCCESS
+    FAILED tests: 1b 9a 9b 9c 9c 10c

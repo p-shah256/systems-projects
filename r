@@ -1,0 +1,15 @@
+command_loop.c
+external_commands.c
+file.txt
+gradescope
+home.txt
+internal_commands.c
+linked_list.c
+Makefile
+parser.c
+parser.h
+README.md
+shell56
+shell56.c
+shell56_commands.h
+shell56.dSYM

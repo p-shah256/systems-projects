@@ -1,0 +1,87 @@
+* cooperative threading library:
+threads continue executing until:
+a. either they yield control
+b. block
+c. exits / done.
+
+
+** data structures
+#+BEGIN_EXAMPLE
+          +-----+
+          |     |
+current   |     |
+          +-----+                              
+
+RUNNABLE_THREADS queue:
+          +-----+    +-----+   +-----+
+          |     +---->     +--->     +---> null
+back  ----+>    |    |     |   |     |
+          +-----+    +-----+   +--^--+
+                                  |
+front ----------------------------+
+#+END_EXAMPLE
+
+
+*** Functions:
+**** qthread init() :
+sets up the environment for threading and moves the current sequence of execution onto a thread = main thread.
+  - init the queue and set the main thread as active
+  - MAYBE? create a runnable queue and waiting queue and ended queue?
+    + ~NOT REQUIRED~ as each of the mutexes and condition variables will have their own queues.
+**** qthread_create():
+create a new thread by
+- allocate a new struct thread
+- make it runnable
+- enqueue
+~DOES NOT RUN THE THREAD~
+   #+BEGIN_VERSE
+	+-----------------+
+	|                 |
+	|                 |
+	|                 |
+	|                 |
+	+-----------------+
+	| actual_th_fun() |
+	+-----------------+
+	|   wrapper()     | <--- stack pointer
+	|   exit()        |
+	+-----------------+
+	State of stack after qthread_create is called
+   #+END_VERSE
+
+**** setup_stack():
+pushes a fake stack to return to func(arg1, arg2);
+MOSTLY should push a wrapper function that exits after the thread is done
+so that whenever we switch we execute the func
+F is the wrapper
+f2 is the function that should be called with arg =
+wrapper calls f2(arg)
+returns a stack pointer
+
+
+
+
+
+*** Concepts:
+**** condition variables:
+cond var is just a queue of threads
+- *signal* takes the front of the queue and makes it runnable
+- *wait* puts the current thread on to that queue and switches to a runnable thread
+  	if you wait and there are no runnable threads - its a deadlock ... except timers
+**** scheduler:
+we can think of the scheduler like a kernel. whenver a thread wants to yield or give up control - it invokes the scheduler which then decides who to run next and switches to it. scheduler much like the kernel in supervisor mode can run in the same thread.
+***** globals: (all runnable) -- must be global so it can be accessed and whenever we switch stack does not get lost
+thread* current is the pointer to currently running thread.
+	if this calls yield we put it in the tail and take one thread off the queue - popFront() and set it to active.
+q<thread> active which is the list of runnable threads.
+***** other blocked threads:
+condition variable queue and mutex queue
+whenever I signal a condition variable waiting queue thread - it is poped off from there and then pushed onto the active list above
+that is what "waking up" means.
+
+
+** Thread control block or qthread:
+stored using a linked list as:
+1. it's inherently flexible and makes it easier to add/remove threads in o(1)
+2. variable size
+3. dynamic memory management

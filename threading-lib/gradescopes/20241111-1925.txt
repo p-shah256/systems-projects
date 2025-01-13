@@ -1,0 +1,16 @@
+Running suite(s): qthreads
+78%: Checks: 14, Failures: 0, Errors: 3
+unit-test.c:42:P:qthread_create:create_yield:0: Passed
+unit-test.c:66:P:qthread_create:create_join_return:0: Passed
+unit-test.c:85:P:qthread_create:create_join_exit:0: Passed
+unit-test.c:118:P:qthread_create:create_three:0: Passed
+unit-test.c:144:P:mutex:mutex_lock:0: Passed
+unit-test.c:179:P:mutex:mutex_lock2:0: Passed
+unit-test.c:221:P:mutex:mutex_three_threads:0: Passed
+unit-test.c:282:P:cond:cond_wait:0: Passed
+unit-test.c:321:P:cond:cond_broadcast:0: Passed
+unit-test.c:380:P:cond:cond_wait2:0: Passed
+unit-test.c:416:P:qthread_usleep:usleep_1thread:0: Passed
+unit-test.c:441:E:qthread_usleep:usleep_2thread:0: (after this point) Received signal 11 (Segmentation fault)
+unit-test.c:475:E:qthread_usleep:usleep_4thread:0: (after this point) Received signal 11 (Segmentation fault)
+unit-test.c:491:E:qthread_usleep:usleep_mutex:0: (after this point) Received signal 11 (Segmentation fault)
